@@ -91,7 +91,7 @@ class MSComplianceCenter(AppBase):
         if top:
             graph_url = f"https://graph.microsoft.com/v1.0/security/alerts?$top={top}"
         else:
-            graph_url = f"https://graph.microsoft.com/v1.0/security/alerts?$top=10"
+            graph_url = "https://graph.microsoft.com/v1.0/security/alerts?$top=10"
         ret = session.get(graph_url)
         print(ret.status_code)
         print(ret.text)
@@ -157,7 +157,7 @@ class MSComplianceCenter(AppBase):
 
     def update_alert(self, tenant_id, client_id, client_secret, alert_id, assigned_to, comments, tags, feedback, status, vendor, provider, sub_provider,provider_version):
         """This function needs to be tested."""
-        
+
         graph_url = "https://graph.microsoft.com"
         session = self.authenticate(tenant_id, client_id, client_secret, graph_url)
 
@@ -165,9 +165,7 @@ class MSComplianceCenter(AppBase):
 
         tags_list = []
         if tags:
-            for tag in tags.split(","):
-                 tags_list.append(tag)         
-
+            tags_list.extend(iter(tags.split(",")))
         request_body = {
             "assignedTo": assigned_to,
             "comments":[comments],
@@ -187,8 +185,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code, "error_response":ret.text}
 
@@ -201,8 +198,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
 
@@ -210,21 +206,21 @@ class MSComplianceCenter(AppBase):
         graph_url = "https://graph.microsoft.com"
         session = self.authenticate(tenant_id, client_id, client_secret, graph_url)
 
-        graph_url = f"https://graph.microsoft.com/v1.0/informationProtection/threatAssessmentRequests/{request_id}"        
+        graph_url = f"https://graph.microsoft.com/v1.0/informationProtection/threatAssessmentRequests/{request_id}"
         ret = session.get(graph_url)
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}    
 
     def create_mail_threat_assessment(self, tenant_id, client_id, client_secret, reciepient_email, expected_assessment, category, message_uri, status):
         graph_url = "https://graph.microsoft.com"
         session = self.authenticate(tenant_id, client_id, client_secret, graph_url)
-        graph_url = f"https://graph.microsoft.com/v1.0/informationProtection/threatAssessmentRequests"
-        
+        graph_url = "https://graph.microsoft.com/v1.0/informationProtection/threatAssessmentRequests"
+
+
         headers = {
             "Content-type": "application/json"
         }
@@ -242,8 +238,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text} 
 
@@ -266,8 +261,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
 
@@ -292,8 +286,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}    
 
@@ -309,8 +302,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
     
@@ -323,8 +315,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
     
@@ -337,8 +328,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
 
@@ -358,8 +348,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}    
     
@@ -381,8 +370,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
     
@@ -395,8 +383,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
 
@@ -409,8 +396,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
 
@@ -423,8 +409,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
 
@@ -437,8 +422,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
 
@@ -461,8 +445,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}    
 
@@ -479,8 +462,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
 
@@ -497,8 +479,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
 
@@ -515,8 +496,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}        
 
@@ -529,8 +509,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
     
@@ -543,8 +522,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
 
@@ -552,7 +530,7 @@ class MSComplianceCenter(AppBase):
         graph_url = "https://graph.microsoft.com"
         session = self.authenticate(tenant_id, client_id, client_secret, graph_url)
         graph_url = f"https://graph.microsoft.com/beta/compliance/ediscovery/cases/{case_id}/legalHolds"
-        
+
         error_list = [str(i) for i in errors.split(',')]
         headers = {
             "Content-Type": "application/json"
@@ -572,8 +550,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}    
     
@@ -586,8 +563,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
 
@@ -600,8 +576,7 @@ class MSComplianceCenter(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}    
     

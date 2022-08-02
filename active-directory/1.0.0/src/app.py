@@ -27,9 +27,7 @@ class ActiveDirectory(AppBase):
         login_dn = domain + "\\" + login_user
 
         s = Server(server, port=int(port), use_ssl=use_SSL)
-        c = Connection(s, user=login_dn, password=password, auto_bind=True)
-
-        return c
+        return Connection(s, user=login_dn, password=password, auto_bind=True)
 
     # Decode UserAccountControl code
     def __getUserAccountControlAttributes(self, input_code):
@@ -56,7 +54,6 @@ class ActiveDirectory(AppBase):
             2: "ACCOUNTDISABLED",
             1: "SCRIPT",
         }
-        lists = []
         attributes = {}
         while input_code > 0:
             for flag, flagName in userAccountControlFlags.items():
@@ -71,9 +68,7 @@ class ActiveDirectory(AppBase):
                     except KeyError:
                         pass
                     input_code = temp
-        for key, val in attributes.items():
-            lists.append(key)
-        return lists
+        return list(attributes)
 
     # Encode UserAccountControl attributes
     def __getUserAccountControlCode(self, input_attributes):
@@ -100,11 +95,9 @@ class ActiveDirectory(AppBase):
             "ACCOUNTDISABLED": 2,
             "SCRIPT": 1,
         }
-        code = 0
-        for attribute in input_attributes:
-            code += userAccountControlFlags[attribute]
-
-        return code
+        return sum(
+            userAccountControlFlags[attribute] for attribute in input_attributes
+        )
 
     # Get User Attributes
     def user_attributes(
@@ -158,17 +151,16 @@ class ActiveDirectory(AppBase):
 
         if new_password != repeat_password:
             return "Password does not match!"
-        else:
-            c = self.__ldap_connection(
-                server, port, domain, login_user, password, use_ssl
-            )
+        c = self.__ldap_connection(
+            server, port, domain, login_user, password, use_ssl
+        )
 
-            result = json.loads( self.user_attributes( server, port, domain, login_user, password, base_dn, use_ssl, samaccountname, search_base,))
+        result = json.loads( self.user_attributes( server, port, domain, login_user, password, base_dn, use_ssl, samaccountname, search_base,))
 
-            user_dn = result["dn"]
-            c.extend.microsoft.modify_password(user_dn, new_password)
+        user_dn = result["dn"]
+        c.extend.microsoft.modify_password(user_dn, new_password)
 
-            return json.dumps(c.result)
+        return json.dumps(c.result)
 
     # Change User Password at Next Logon
     def change_password_at_next_logon(
@@ -205,13 +197,12 @@ class ActiveDirectory(AppBase):
 
         if "DONT_EXPIRE_PASSWORD" in userAccountControl:
             return "Error: Flag DONT_EXPIRE_PASSWORD is set."
-        else:
-            user_dn = result["dn"]
-            password_expire = {"pwdLastSet": (MODIFY_REPLACE, [0])}
-            c.modify(dn=user_dn, changes=password_expire)
-            c.result["samAccountName"] = samaccountname
+        user_dn = result["dn"]
+        password_expire = {"pwdLastSet": (MODIFY_REPLACE, [0])}
+        c.modify(dn=user_dn, changes=password_expire)
+        c.result["samAccountName"] = samaccountname
 
-            return json.dumps(c.result)
+        return json.dumps(c.result)
 
     # Enable User
     def enable_user(

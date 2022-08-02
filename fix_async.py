@@ -7,7 +7,7 @@ for folder in folders:
         subfolders = os.listdir(f"{basedir}/{folder}")
     except:
         continue
-    
+
     for subfolder in subfolders:
         filename = f"{basedir}/{folder}/{subfolder}/src/app.py"
         data = ""
@@ -27,9 +27,9 @@ for folder in folders:
                 with open(f"{filename}", "w+") as tmp:
                     tmp.write(data)
 
-            print("Fixed: %s" % filename)
+            print(f"Fixed: {filename}")
         except:
-            print("Skipped: %s" % filename)
+            print(f"Skipped: {filename}")
 
 
     #break

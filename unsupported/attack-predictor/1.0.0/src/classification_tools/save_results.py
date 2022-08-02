@@ -32,10 +32,9 @@ def save_results_in_file(report, title, date, ttps):
 					object_refs = ttps) #list of related identifiers techniques and tactics
 	fss = stx.FileSystemSink("./")
 	fss._check_path_and_write(stix_report)
-	folder_of_created_report = "./report/" + stix_report.id + "/*"
+	folder_of_created_report = f"./report/{stix_report.id}/*"
 	list_of_files = glob.glob(folder_of_created_report) # * means all if need specific format then *.csv
-	file_to_save = max(list_of_files, key = os.path.getctime)
-	return file_to_save
+	return max(list_of_files, key = os.path.getctime)
 
 def save_to_train_set(report, references):
 	"""

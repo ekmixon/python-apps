@@ -32,12 +32,6 @@ class PythonPlayground(AppBase):
         print(NewsFeed)
         return NewsFeed.entries
 
-        print(NewsFeed)
-        entry = NewsFeed.entries[1]
-        
-        print(entry.keys())
-        return entry.keys()
-
     # Write your data inside this function
     #def get_rss_feed(self, url):
     #    # It comes in as a string, so needs to be set to JSON

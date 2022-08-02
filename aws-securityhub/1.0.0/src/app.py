@@ -113,7 +113,7 @@ class AWSEC2(AppBase):
     def create_finding(self, access_key, secret_key, region, productArn, id, title, description):
         client = self.auth(access_key, secret_key, region)
 
-        shuffle_id = "SOMETHING_%s" % id
+        shuffle_id = f"SOMETHING_{id}"
         findings = [{
             'SchemaVersion': '2018-10-08',
             'Id': shuffle_id,

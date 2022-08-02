@@ -37,27 +37,20 @@ class Cortex(AppBase):
         if len(analyzers) == 0:
             return []
 
-        all_results = []
-        for analyzer in analyzers:
-            if not datatype in analyzer.dataTypeList:
-                continue
-
-            all_results.append(analyzer.name)
-
-        return all_results
+        return [
+            analyzer.name
+            for analyzer in analyzers
+            if datatype in analyzer.dataTypeList
+        ]
 
     def run_available_analyzers(self, apikey, url, data, datatype, message="", tlp=1, force="true"):
-        if data == "" or data == "[]":
+        if data in ["", "[]"]:
             return {
                 "success": False,
                 "reason": "No values to handle []",
             }
 
-        if str(force.lower()) == "true":
-            force = 1
-        else:
-            force = 0
-
+        force = 1 if str(force.lower()) == "true" else 0
         self.api = Api(url, apikey, cert=False)
         analyzers = self.get_available_analyzers(apikey, url, datatype)
 
@@ -84,11 +77,7 @@ class Cortex(AppBase):
         return alljobs
 
     def run_analyzer(self, apikey, url, analyzer_name, data, datatype, message="", tlp=1, force="true"):
-        if str(force.lower()) == "true":
-            force = 1
-        else:
-            force = 0
-
+        force = 1 if str(force.lower()) == "true" else 0
         self.api = Api(url, apikey, cert=False)
         try:
             job = self.api.analyzers.run_by_name(analyzer_name, {

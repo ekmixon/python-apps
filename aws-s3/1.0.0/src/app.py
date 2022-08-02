@@ -45,26 +45,22 @@ class AWSS3(AppBase):
         self.s3 = self.auth_s3(access_key, secret_key, region)
         client = self.s3.meta.client
         try:
-            newlist = client.list_buckets()
-            return newlist
+            return client.list_buckets()
         except botocore.exceptions.ClientError as e:
-            return "Error: %s" % e
+            return f"Error: {e}"
 
     def create_bucket(self, access_key, secret_key, region, bucket_name, access_type):
         self.s3 = self.auth_s3(access_key, secret_key, region)
         client = self.s3.meta.client
         try:
-            creation = client.create_bucket(
+            return client.create_bucket(
                 Bucket=bucket_name,
                 ACL=access_type,
-                CreateBucketConfiguration={
-                    'LocationConstraint': region
-                },
+                CreateBucketConfiguration={'LocationConstraint': region},
             )
 
-            return creation 
         except botocore.exceptions.ClientError as e:
-            return "Error: %s" % e
+            return f"Error: {e}"
 
     def block_ip_access(self, access_key, secret_key, region, bucket_name, ip):
         self.s3 = self.auth_s3(access_key, secret_key, region)
@@ -75,8 +71,8 @@ class AWSS3(AppBase):
             "Principal": "*",
             "Action": "s3:*",
             "Resource": [
-                "arn:aws:s3:::%s/*" % bucket_name,
-                "arn:aws:s3:::%s" % bucket_name
+                f"arn:aws:s3:::{bucket_name}/*",
+                f"arn:aws:s3:::{bucket_name}",
             ],
             "Condition": {
                 "IpAddress": {
@@ -84,8 +80,9 @@ class AWSS3(AppBase):
                         ip,
                     ]
                 }
-            }
+            },
         }
+
 
         json_policy = {}
         try:
@@ -94,7 +91,7 @@ class AWSS3(AppBase):
                 policy = result["Policy"]
                 print(policy)
                 if ip in policy:
-                    return "IP %s is already in this policy" % ip
+                    return f"IP {ip} is already in this policy"
 
                 json_policy = json.loads(policy)
                 try:
@@ -118,10 +115,10 @@ class AWSS3(AppBase):
         try:
             putaction = client.put_bucket_policy(Bucket=bucket_name, Policy=bucket_policy)
         except botocore.exceptions.ClientError as e:
-            return "Failed setting policy: %s" % e
+            return f"Failed setting policy: {e}"
 
         print(putaction)
-        return "Successfully blocked IP %s" % ip
+        return f"Successfully blocked IP {ip}"
 
     def bucket_request_payment(self, access_key, secret_key, region, bucket_name):
         self.s3 = self.auth_s3(access_key, secret_key, region)
@@ -130,7 +127,7 @@ class AWSS3(AppBase):
         try:
             return client.get_bucket_request_payment(Bucket=bucket_name)
         except botocore.exceptions.ClientError as e:
-            return "Error: %s" % e
+            return f"Error: {e}"
 
     def bucket_replication(self, access_key, secret_key, region, bucket_name):
         self.s3 = self.auth_s3(access_key, secret_key, region)
@@ -139,7 +136,7 @@ class AWSS3(AppBase):
         try:
             return client.get_bucket_replication(Bucket=bucket_name)
         except botocore.exceptions.ClientError as e:
-            return "Error: %s" % e
+            return f"Error: {e}"
 
     def bucket_policy_status(self, access_key, secret_key, region, bucket_name):
         self.s3 = self.auth_s3(access_key, secret_key, region)
@@ -148,7 +145,7 @@ class AWSS3(AppBase):
         try:
             return client.get_bucket_policy_status(Bucket=bucket_name)
         except botocore.exceptions.ClientError as e:
-            return "Error: %s" % e
+            return f"Error: {e}"
 
     def bucket_logging(self, access_key, secret_key, region, bucket_name):
         self.s3 = self.auth_s3(access_key, secret_key, region)
@@ -157,7 +154,7 @@ class AWSS3(AppBase):
         try:
             return client.get_bucket_logging(Bucket=bucket_name)
         except botocore.exceptions.ClientError as e:
-            return "Error: %s" % e
+            return f"Error: {e}"
 
     def upload_file_to_bucket(self, access_key, secret_key, region, bucket_name, bucket_path, file_id):
         self.s3 = self.auth_s3(access_key, secret_key, region)
@@ -166,17 +163,16 @@ class AWSS3(AppBase):
         found_file = self.get_file(file_id)
         print(found_file)
 
-        s3_response = client.put_object(Bucket=bucket_name, Key=bucket_path, Body=found_file["data"])
-
         #s3_response = client.upload_file('LOCAL PATH', bucket_name, bucket_path)
-        return s3_response
+        return client.put_object(
+            Bucket=bucket_name, Key=bucket_path, Body=found_file["data"]
+        )
 
     def delete_file_from_bucket(self, access_key, secret_key, region, bucket_name, bucket_path):
         self.s3 = self.auth_s3(access_key, secret_key, region)
         client = self.s3.meta.client
 
-        s3_response = client.delete_object(Bucket=bucket_name, Key=bucket_path)
-        return s3_response
+        return client.delete_object(Bucket=bucket_name, Key=bucket_path)
 
     def download_file_from_bucket(self, access_key, secret_key, region, bucket_name, filename):
         self.s3 = self.auth_s3(access_key, secret_key, region)
@@ -191,19 +187,15 @@ class AWSS3(AppBase):
         }
         ret = self.set_files(filedata)
 
-        if isinstance(ret, list):
-            if len(ret) == 1:
-                return {
-                    "success": True,
-                    "file_id": ret[0],
-                    "filename": filename,
-                    "length": len(object_content),
-                }
+        if isinstance(ret, list) and len(ret) == 1:
+            return {
+                "success": True,
+                "file_id": ret[0],
+                "filename": filename,
+                "length": len(object_content),
+            }
 
-        return {
-            "success": False,
-            "reason": "Bad return from file upload: %s" % ret
-        }
+        return {"success": False, "reason": f"Bad return from file upload: {ret}"}
 
 if __name__ == "__main__":
     AWSS3.run()

@@ -104,7 +104,8 @@ class Intune(AppBase):
     def list_managedAppConfigurations(self, tenant_id, client_id, client_secret):
         graph_url="https://graph.microsoft.com"
         session = self.authenticate(tenant_id, client_id, client_secret, graph_url)
-        graph_url=f"https://graph.microsoft.com/v1.0/deviceAppManagement/managedAppPolicies"
+        graph_url = "https://graph.microsoft.com/v1.0/deviceAppManagement/managedAppPolicies"
+
         ret = session.post(graph_url)
         return ret.text
 

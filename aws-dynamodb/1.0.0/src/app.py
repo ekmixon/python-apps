@@ -47,7 +47,7 @@ class AWSDynamoDB(AppBase):
         try:
             return client.list_tables()
         except botocore.exceptions.ClientError as e:
-            return "Error: %s" % e
+            return f"Error: {e}"
 
     def list_global_tables(self, access_key, secret_key, region):
         self.dynamodb = self.auth_dynamodb(access_key, secret_key, region)
@@ -55,7 +55,7 @@ class AWSDynamoDB(AppBase):
         try:
             return client.list_global_tables()
         except botocore.exceptions.ClientError as e:
-            return "Error: %s" % e
+            return f"Error: {e}"
 
     def get_global_table_setttings(self, access_key, secret_key, region, table_name):
         self.dynamodb = self.auth_dynamodb(access_key, secret_key, region)
@@ -64,7 +64,7 @@ class AWSDynamoDB(AppBase):
         try:
             return client.describe_global_table_settings(GlobalTableName=table_name)
         except botocore.exceptions.ClientError as e:
-            return "Error: %s" % e
+            return f"Error: {e}"
 
     def get_backups(self, access_key, secret_key, region, table_name):
         self.dynamodb = self.auth_dynamodb(access_key, secret_key, region)
@@ -73,7 +73,7 @@ class AWSDynamoDB(AppBase):
         try:
             return client.list_backups(TableName=table_name)
         except botocore.exceptions.ClientError as e:
-            return "Error: %s" % e
+            return f"Error: {e}"
 
 if __name__ == "__main__":
     AWSDynamoDB.run()

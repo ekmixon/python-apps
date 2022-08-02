@@ -57,8 +57,7 @@ class MsIdentityAccess(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code}
 
@@ -72,8 +71,7 @@ class MsIdentityAccess(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code, "error_response":ret.text}
 
@@ -81,8 +79,8 @@ class MsIdentityAccess(AppBase):
         graph_url = "https://graph.microsoft.com"
         session = self.authenticate(tenant_id, client_id, client_secret, graph_url)
 
-        graph_url = f"https://graph.microsoft.com/v1.0/directory/administrativeUnits"
-        
+        graph_url = "https://graph.microsoft.com/v1.0/directory/administrativeUnits"
+
         request_body = {
             "displayName": display_name,
             "description": description,
@@ -93,8 +91,7 @@ class MsIdentityAccess(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code, "error_response":ret.text, "error_response":ret.text}
 
@@ -107,8 +104,7 @@ class MsIdentityAccess(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code}
 
@@ -121,8 +117,7 @@ class MsIdentityAccess(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code, "error_response":ret.text}
     
@@ -135,21 +130,18 @@ class MsIdentityAccess(AppBase):
         ret = session.delete(graph_url)
         print(ret.status_code)
         print(ret.text)
-        return ret.json() 
-
-        return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code,"error_response":ret.text}
+        return ret.json()
 
     def list_risky_users(self, tenant_id, client_id, client_secret):
         graph_url = "https://graph.microsoft.com"
         session = self.authenticate(tenant_id, client_id, client_secret, graph_url)
 
-        graph_url = f"https://graph.microsoft.com/v1.0/identityProtection/riskyUsers"
+        graph_url = "https://graph.microsoft.com/v1.0/identityProtection/riskyUsers"
         ret = session.get(graph_url)
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code}
 
@@ -162,8 +154,7 @@ class MsIdentityAccess(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code, "error_response":ret.text}
 
@@ -174,17 +165,16 @@ class MsIdentityAccess(AppBase):
         graph_url = "https://graph.microsoft.com/v1.0/identityProtection/riskyUsers/confirmCompromised"
 
         user_list = [str(user) for user in risky_user_ids.split(',')]
-        
+
         request_body = {
             "userIds": user_list
         }
-        
+
         ret = session.post(graph_url, json= request_body)
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code, "error_response":ret.text}
 
@@ -195,17 +185,16 @@ class MsIdentityAccess(AppBase):
         graph_url = "https://graph.microsoft.com/v1.0/identityProtection/riskyUsers/dismiss"
 
         user_list = [str(user) for user in risky_user_ids.split(',')]
-        
+
         request_body = {
             "userIds": user_list
         }
-        
+
         ret = session.post(graph_url, json= request_body)
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code, "error_response":ret.text}            
 
@@ -218,8 +207,7 @@ class MsIdentityAccess(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code, "error_response":ret.text}
 
@@ -232,8 +220,7 @@ class MsIdentityAccess(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code, "error_response":ret.text}    
 
@@ -251,8 +238,7 @@ class MsIdentityAccess(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code, "error_response":ret.text}
 
@@ -270,8 +256,7 @@ class MsIdentityAccess(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code, "error_response":ret.text}
 
@@ -285,8 +270,7 @@ class MsIdentityAccess(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code, "error_response":ret.text}
     
@@ -307,8 +291,7 @@ class MsIdentityAccess(AppBase):
         print(ret.status_code)
         print(ret.text)
         if ret.status_code < 300:
-            data = ret.json()
-            return data
+            return ret.json()
 
         return {"success": False, "reason": "Bad status code %d - expecting 200." % ret.status_code, "error_response":ret.text}        
 

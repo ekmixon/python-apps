@@ -52,7 +52,7 @@ class AWSLambda(AppBase):
         try:
             kwargs = {'FunctionName':function_name}
             if qualifier:
-                kwargs.update({'Qualifier':qualifier})
+                kwargs['Qualifier'] = qualifier
             return client.get_function(**kwargs)
         except Exception as e:
             return f"Error: {e}"
@@ -62,7 +62,7 @@ class AWSLambda(AppBase):
         try:
             kwargs = {'FunctionName':function_name}
             if function_version:
-                kwargs.update({'FunctionVersion':function_version})
+                kwargs['FunctionVersion'] = function_version
             return client.list_aliases(**kwargs)
         except Exception as e:
             return f"Error: {e}"
@@ -93,7 +93,7 @@ class AWSLambda(AppBase):
         kwargs = {'FunctionName': function_name}
         try:
             if qualifier:
-                kwargs.update({'Qualifier':qualifier})
+                kwargs['Qualifier'] = qualifier
             return client.delete_function(**kwargs)
         except Exception as e:
             return f"Error: {e}"

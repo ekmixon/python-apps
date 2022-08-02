@@ -13,7 +13,7 @@ from walkoff_app_sdk.app_base import AppBase
 def datetime_handler(x):
     """ This function is used make datetime object json serilizable, 
     removing this function can cause error in some actions """
-    
+
     if isinstance(x, datetime.datetime):
         return x.isoformat()
     raise TypeError("Unknown type")
@@ -57,8 +57,8 @@ class AWSIAM(AppBase):
         try:
             return client.update_login_profile(UserName=username, Password=password, PasswordResetRequired=True)
         except botocore.exceptions.ClientError as e:
-            print("Error: %s" % e)
-            return "%s" % e
+            print(f"Error: {e}")
+            return f"{e}"
 
     def attach_user_policy(self, access_key, secret_key, region, username, policy_arn):
         self.iam = self.auth_iam(access_key, secret_key, region)

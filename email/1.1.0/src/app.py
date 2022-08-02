@@ -25,8 +25,7 @@ from walkoff_app_sdk.app_base import AppBase
 
 def json_serial(obj):
     if isinstance(obj, datetime.datetime):
-        serial = obj.isoformat()
-        return serial
+        return obj.isoformat()
 
 def default(o):
     """helpers to store item in json
@@ -67,7 +66,7 @@ class Email(AppBase):
         data = {"targets": targets, "body": body, "subject": subject, "type": "alert"}
 
         url = "https://shuffler.io/functions/sendmail"
-        headers = {"Authorization": "Bearer %s" % apikey}
+        headers = {"Authorization": f"Bearer {apikey}"}
         return requests.post(url, headers=headers, json=data).text
 
     def send_email_smtp(
@@ -77,16 +76,14 @@ class Email(AppBase):
             try:
                 smtp_port = int(smtp_port)
             except ValueError:
-                return "SMTP port needs to be a number (Current: %s)" % smtp_port
+                return f"SMTP port needs to be a number (Current: {smtp_port})"
 
         try:
             s = smtplib.SMTP(host=smtp_host, port=smtp_port)
         except socket.gaierror as e:
             return f"Bad SMTP host or port: {e}"
 
-        if ssl_verify == "false" or ssl_verify == "False":
-            pass
-        else:
+        if ssl_verify not in ["false", "False"]:
             s.starttls()
 
         if len(username) > 0 or len(password) > 0:
@@ -106,7 +103,7 @@ class Email(AppBase):
         attachment_count = 0
         try:
             if attachments != None and len(attachments) > 0:
-                print("Got attachments: %s" % attachments)
+                print(f"Got attachments: {attachments}")
                 attachmentsplit = attachments.split(",")
 
                 #attachments = parse_list(attachments, splitter=",")
@@ -132,8 +129,8 @@ class Email(AppBase):
 
                     #files.append(new_file)
 
-                #return files
-                #data["attachments"] = files
+                        #return files
+                        #data["attachments"] = files
         except Exception as e:
             print(f"Error in attachment parsing for email: {e}")
 
@@ -146,11 +143,11 @@ class Email(AppBase):
                 "reason": f"Failed to send mail: {e}"
             }
 
-        print("Successfully sent email with subject %s to %s" % (subject, recipient))
+        print(f"Successfully sent email with subject {subject} to {recipient}")
         return {
-            "success": True, 
-            "reason": "Email sent to %s!" % recipient,
-            "attachments": attachment_count
+            "success": True,
+            "reason": f"Email sent to {recipient}!",
+            "attachments": attachment_count,
         }
 
     def get_emails_imap(
@@ -189,7 +186,7 @@ class Email(AppBase):
             try:
                 amount = int(amount)
             except ValueError:
-                return "Amount needs to be a number, not %s" % amount
+                return f"Amount needs to be a number, not {amount}"
 
         try:
             email = imaplib.IMAP4_SSL(imap_server)
@@ -197,9 +194,7 @@ class Email(AppBase):
             try:
                 email = imaplib.IMAP4(imap_server)
 
-                if ssl_verify == "false" or ssl_verify == "False":
-                    pass
-                else:
+                if ssl_verify not in ["false", "False"]:
                     email.starttls()
             except socket.gaierror as error:
                 return "Can't connect to IMAP server %s: %s" % (imap_server, error)
@@ -209,10 +204,10 @@ class Email(AppBase):
         try:
             email.login(username, password)
         except imaplib.IMAP4.error as error:
-            return "Failed to log into %s: %s" % (username, error)
+            return f"Failed to log into {username}: {error}"
 
         email.select(foldername)
-        unread = True if unread.lower().strip() == "true" else False
+        unread = unread.lower().strip() == "true"
         try:
             # IMAP search queries, e.g. "seen" or "read"
             # https://www.rebex.net/secure-mail.net/features/imap-search.aspx
@@ -223,24 +218,21 @@ class Email(AppBase):
 
         email_ids = data[0]
         id_list = email_ids.split()
-        if id_list == None:
+        if id_list is None:
             return "Couldn't retrieve email. Data: %s" % data
 
         try:
             print("LIST: ", len(id_list))
         except TypeError:
-            return "Error getting email. Data: %s" % data
+            return f"Error getting email. Data: {data}"
 
-        include_raw_body = True if include_raw_body.lower().strip() == "true" else False
-        include_attachment_data = (
-            True if include_attachment_data.lower().strip() == "true" else False
-        )
-        upload_email_shuffle = (
-            True if upload_email_shuffle.lower().strip() == "true" else False
-        )
+        include_raw_body = include_raw_body.lower().strip() == "true"
+        include_attachment_data = include_attachment_data.lower().strip() == "true"
+        upload_email_shuffle = upload_email_shuffle.lower().strip() == "true"
         upload_attachments_shuffle = (
-            True if upload_attachments_shuffle.lower().strip() == "true" else False
+            upload_attachments_shuffle.lower().strip() == "true"
         )
+
 
         # Convert <amount> of mails in json
         emails = []
@@ -255,10 +247,10 @@ class Email(AppBase):
                 error = None
 
                 if resp != "OK":
-                    print("Failed getting %s" % id_list[i])
+                    print(f"Failed getting {id_list[i]}")
                     continue
 
-                if data == None:
+                if data is None:
                     continue
 
                 output_dict = {}
@@ -311,7 +303,7 @@ class Email(AppBase):
                 "reason": "Couldn't get file with ID %s" % file_id
             }
 
-        print("File: %s" % file_path)
+        print(f"File: {file_path}")
         if file_extension.lower() == 'eml':
             print('working with .eml file')
             ep = eml_parser.EmlParser()
@@ -319,17 +311,16 @@ class Email(AppBase):
                 parsed_eml = ep.decode_email_bytes(file_path['data'])
                 return json.dumps(parsed_eml, default=json_serial)   
             except Exception as e:
-                return {"Success":"False","Message":f"Exception occured: {e}"} 
+                return {"Success":"False","Message":f"Exception occured: {e}"}
         elif file_extension.lower() == 'msg':
             print('working with .msg file')
             try:
                 msg = MsOxMessage(file_path['data'])
                 msg_properties_dict = msg.get_properties()
                 print(msg_properties_dict)
-                frozen = jsonpickle.encode(msg_properties_dict)
-                return frozen
+                return jsonpickle.encode(msg_properties_dict)
             except Exception as e:
-                return {"Success":"False","Message":f"Exception occured: {e}"}    
+                return {"Success":"False","Message":f"Exception occured: {e}"}
         else:
             return {"Success":"False","Message":f"No file handler for file extension {file_extension}"}    
 
@@ -353,7 +344,7 @@ def run(request):
         Email.run(action)
         return f'Attempting to execute function {action["name"]} in app {action["app_name"]}'
     else:
-        return f"Invalid action"
+        return "Invalid action"
 
 
 if __name__ == "__main__":

@@ -32,7 +32,7 @@ class Misp(AppBase):
         super().__init__(redis, logger, console_logger)
 
     def simplified_attribute_search(self, apikey, url, data):
-        url = "%s/attributes/restSearch" % url
+        url = f"{url}/attributes/restSearch"
         data = {"value": data}
         headers = {
             "Accept": "application/json",
@@ -43,7 +43,7 @@ class Misp(AppBase):
         return requests.post(url, headers=headers, json=data, verify=self.verify).text
 
     def simplified_warninglist_search(self, apikey, url, data):
-        url = "%s/warninglists/checkValue" % url
+        url = f"{url}/warninglists/checkValue"
         headers = {
             "Accept": "application/json",
             "Content-type": "application/json",
@@ -53,7 +53,7 @@ class Misp(AppBase):
         return requests.post(url, headers=headers, json=data, verify=self.verify).text
     
     def simplified_event_search(self, apikey, url, data):
-        url = "%s/events/restSearch" % url
+        url = f"{url}/events/restSearch"
         data = {"value": data}
         headers = {
             "Accept": "application/json",
@@ -64,7 +64,7 @@ class Misp(AppBase):
         return requests.post(url, headers=headers, json=data, verify=self.verify).text
 
     def attributes_search(self, apikey, url, data):
-        url = "%s/attributes/restSearch" % url
+        url = f"{url}/attributes/restSearch"
         headers = {
             "Accept": "application/json",
             "Content-type": "application/json",
@@ -74,7 +74,7 @@ class Misp(AppBase):
         return requests.post(url, headers=headers, data=data, verify=self.verify).text
 
     def warninglist_search(self, apikey, url, data):
-        url = "%s/warninglists/checkValue" % url
+        url = f"{url}/warninglists/checkValue"
         headers = {
             "Accept": "application/json",
             "Content-type": "application/json",
@@ -84,7 +84,7 @@ class Misp(AppBase):
         return requests.post(url, headers=headers, data=data, verify=self.verify).text
     
     def events_search(self, apikey, url, data):
-        url = "%s/events/restSearch" % url
+        url = f"{url}/events/restSearch"
         headers = {
             "Accept": "application/json",
             "Content-type": "application/json",
@@ -93,7 +93,7 @@ class Misp(AppBase):
         return requests.post(url, headers=headers, data=data, verify=self.verify).text
 
     def events_index(self, apikey, url, data):
-        url = "%s/events/index" % url
+        url = f"{url}/events/index"
         headers = {
             "Accept": "application/json",
             "Content-type": "application/json",
@@ -102,7 +102,7 @@ class Misp(AppBase):
         return requests.post(url, headers=headers, data=data, verify=self.verify).text
 
     def event_edit(self, apikey, url, event_id, data):
-        url = "{}/events/edit/{}".format(url, event_id)
+        url = f"{url}/events/edit/{event_id}"
         headers = {
             "Accept": "application/json",
             "Content-type": "application/json",
@@ -115,16 +115,16 @@ class Misp(AppBase):
         items = md5_list if type(md5_list) == list else md5_list.split(",")
         for md5 in items:
 
-            print("Initial md5_list: {}".format(md5_list))
+            print(f"Initial md5_list: {md5_list}")
 
             # value returned from misp is filename|md5
             # the list in converted as string, so items has quote and last closing parenthesis
             md5 = md5.split("|")[-1]
             # .replace("[", "").replace('"', "").replace("]", "")
 
-            print("Downloading with md5: {}".format(md5))
+            print(f"Downloading with md5: {md5}")
 
-            url = "{}/attributes/downloadSample/{}".format(url, md5)
+            url = f"{url}/attributes/downloadSample/{md5}"
             misp_headers = {
                 "Accept": "application/json",
                 "Content-type": "application/json",
@@ -133,25 +133,24 @@ class Misp(AppBase):
             # get sample by md5 (works only if md5 is related to file object)
             ret = requests.get(url, headers=misp_headers, verify=self.verify)
 
-            if ret.status_code == 200:
-                sample = ret.json().get("result", None)
-                if sample and len(sample) == 1:
-                    sample = sample[0]
-                elif not sample and ret.json().get("message", None):
-                    return "Return message: {}".format(ret.json()["message"])
+            if ret.status_code != 200:
+                return f"Issue downloading {md5}"
 
-                atts_up.append(
-                    {
-                        "filename": "{}.zip".format(sample["filename"]),
-                        "data": base64.b64decode(sample["base64"]),
-                    }
-                )
-            else:
-                return "Issue downloading {}".format(md5)
+            sample = ret.json().get("result", None)
+            if sample and len(sample) == 1:
+                sample = sample[0]
+            elif not sample and ret.json().get("message", None):
+                return f'Return message: {ret.json()["message"]}'
 
-        if len(atts_up) > 0:
-            uuids = self.set_files(atts_up)
-            return uuids
+            atts_up.append(
+                {
+                    "filename": f'{sample["filename"]}.zip',
+                    "data": base64.b64decode(sample["base64"]),
+                }
+            )
+
+        if atts_up:
+            return self.set_files(atts_up)
 
 
 if __name__ == "__main__":

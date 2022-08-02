@@ -48,8 +48,7 @@ class Cylance(AppBase):
         payload = {"auth_token": encoded}
         headers = {"Content-Type": "application/json; charset=utf-8"}
         resp = requests.post(AUTH_URL, headers=headers, data=json.dumps(payload))
-        auth_token = resp.json()["access_token"]
-        return auth_token
+        return resp.json()["access_token"]
 
     def get_threat(self, app_id, app_secret, tenant_id, threat_id):
         auth_token = self.auth(app_id, app_secret, tenant_id)
@@ -78,9 +77,9 @@ class Cylance(AppBase):
     def list_threats(self, app_id, app_secret, tenant_id, page=1, page_size=20):
         auth_token = self.auth(app_id, app_secret, tenant_id)
 
-        if page == 0 or page == "":
+        if page in [0, ""]:
             page = 1
-        if page_size == 0 or page_size == "":
+        if page_size in [0, ""]:
             page_size = 20
 
         url = "https://protectapi.cylance.com/threats/v2"
@@ -100,9 +99,9 @@ class Cylance(AppBase):
     def list_detections(self, app_id, app_secret, tenant_id, page=1, page_size=20):
         auth_token = self.auth(app_id, app_secret, tenant_id)
 
-        if page == 0 or page == "":
+        if page in [0, ""]:
             page = 1
-        if page_size == 0 or page_size == "":
+        if page_size in [0, ""]:
             page_size = 20
 
         url = "https://protectapi.cylance.com/detections/v2"
@@ -118,18 +117,12 @@ class Cylance(AppBase):
 
         resp = requests.get(url, headers=headers, params=params)
         return resp.text
-        print(resp.text)
-        print(resp.status_code)
 
     def get_global_list(self, app_id, app_secret, tenant_id, list_type="GlobalSafe", page=1):
         auth_token = self.auth(app_id, app_secret, tenant_id)
 
 
-        if list_type == "GlobalQuarantine":
-            list_type = 0
-        else:
-            list_type = 1
-
+        list_type = 0 if list_type == "GlobalQuarantine" else 1
         page_size = 50
 
         url = "https://protectapi.cylance.com/globallists/v2"
@@ -221,7 +214,7 @@ class Cylance(AppBase):
             "page_size": page_size,
         }
 
-        url = "https://protectapi.cylance.com/instaqueries/v2/%s/results" % search_id
+        url = f"https://protectapi.cylance.com/instaqueries/v2/{search_id}/results"
         headers = {
             "Authorization": f"Bearer {auth_token}"
         }

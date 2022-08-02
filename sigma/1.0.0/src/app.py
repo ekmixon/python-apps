@@ -42,11 +42,11 @@ class Sigma(AppBase):
             if not filename:
                 continue
 
-            self.logger.info("File: %s" % member)
+            self.logger.info(f"File: {member}")
             source = files.open(member)
-            with open("%s/%s" % (basedir, source.name), "wb+") as tmp:
+            with open(f"{basedir}/{source.name}", "wb+") as tmp:
                 filedata = source.read()
-                self.logger.info("Filedata (%s): %s" % (source.name, filedata))
+                self.logger.info(f"Filedata ({source.name}): {filedata}")
                 tmp.write(filedata)
 
         self.logger.info(f"Dir: {os.listdir(basedir)}")
@@ -55,16 +55,12 @@ class Sigma(AppBase):
         #filename = "file.yaml" 
         #with open(filename, "w+") as tmp:
         #    tmp.write(rule)
-    
-        code = "sigmac --target=%s" % engine
+
+        code = f"sigmac --target={engine}"
         #if len(backend) > 0:
         if backend:
-            if "list" in backend:
-                code += "--list"
-            else:
-                code += " -c %s" % backend
-    
-        code += " rules/*" 
+            code += "--list" if "list" in backend else f" -c {backend}"
+        code += " rules/*"
         self.logger.info("Code: ", code)
         print(code)
         print()
@@ -83,13 +79,12 @@ class Sigma(AppBase):
         else:
             print("FAILED to run bash: ", stdout[1])
             item = stdout[1]
-    
+
         try:
-            ret = item.decode("utf-8")
-            return ret
+            return item.decode("utf-8")
         except Exception:
             return item
-    
+
         return item
 
 if __name__ == "__main__":

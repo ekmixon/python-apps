@@ -15,8 +15,7 @@ def recurse_loop(basejson, parsersplit):
     match = "#(\d+):?-?([0-9a-z]+)?#?"
     print("Split: %s\n%s" % (parsersplit, basejson))
     try:
-        outercnt = 0
-        for value in parsersplit:
+        for outercnt, value in enumerate(parsersplit):
             print("VALUE: %s\n" % value)
             actualitem = re.findall(match, value, re.MULTILINE)
             if value == "#":
@@ -31,7 +30,7 @@ def recurse_loop(basejson, parsersplit):
                         print("INDEXERROR: ", parsersplit[outercnt])
                         #ret = innervalue
                         ret = recurse_loop(innervalue, parsersplit[outercnt:])
-                        
+
                     print(ret)
                     #exit()
                     newvalue.append(ret)
@@ -57,7 +56,7 @@ def recurse_loop(basejson, parsersplit):
                     for i in range(int(firstitem), int(seconditem)):
                         # 1. Check the next item (message)
                         # 2. Call this function again
-                        print("Base: %s" % basejson[i])
+                        print(f"Base: {basejson[i]}")
 
                         try:
                             ret = recurse_loop(basejson[i], parsersplit[outercnt+1:])
@@ -65,7 +64,7 @@ def recurse_loop(basejson, parsersplit):
                             print("INDEXERROR: ", parsersplit[outercnt])
                             #ret = innervalue
                             ret = recurse_loop(innervalue, parsersplit[outercnt:])
-                            
+
                         print(ret)
                         #exit()
                         newvalue.append(ret)
@@ -77,7 +76,7 @@ def recurse_loop(basejson, parsersplit):
                     return basejson
 
                 if isinstance(basejson[value], str):
-                    print(f"LOADING STRING '%s' AS JSON" % basejson[value]) 
+                    print("LOADING STRING '%s' AS JSON" % basejson[value])
                     try:
                         basejson = json.loads(basejson[value])
                     except json.decoder.JSONDecodeError as e:
@@ -86,12 +85,10 @@ def recurse_loop(basejson, parsersplit):
                 else:
                     basejson = basejson[value]
 
-            outercnt += 1
-
     except KeyError as e:
-        print("Lower keyerror: %s" % e)
-        #return basejson
-        #return "KeyError: Couldn't find key: %s" % e
+        print(f"Lower keyerror: {e}")
+            #return basejson
+            #return "KeyError: Couldn't find key: %s" % e
 
     return basejson
 

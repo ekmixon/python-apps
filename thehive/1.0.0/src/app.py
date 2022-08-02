@@ -125,11 +125,11 @@ class TheHive(AppBase):
 
         if isinstance(tlp, str):
             if not tlp.isdigit():
-                return "TLP needs to be a number from 0-2, not %s" % tlp
+                return f"TLP needs to be a number from 0-2, not {tlp}"
             tlp = int(tlp)
         if isinstance(severity, str):
             if not severity.isdigit():
-                return "Severity needs to be a number from 0-2, not %s" % tlp
+                return f"Severity needs to be a number from 0-2, not {tlp}"
 
             severity = int(severity)
 
@@ -150,7 +150,7 @@ class TheHive(AppBase):
             ret = self.thehive.create_case(case)
             return ret.text
         except requests.exceptions.ConnectionError as e:
-            return "ConnectionError: %s" % e
+            return f"ConnectionError: {e}"
 
     def create_alert(
         self,
@@ -184,12 +184,12 @@ class TheHive(AppBase):
 
         if isinstance(tlp, str):
             if not tlp.isdigit():
-                return "TLP needs to be a number from 0-3, not %s" % tlp
+                return f"TLP needs to be a number from 0-3, not {tlp}"
 
             tlp = int(tlp)
         if isinstance(severity, str):
             if not severity.isdigit():
-                return "Severity needs to be a number from 1-3, not %s" % severity
+                return f"Severity needs to be a number from 1-3, not {severity}"
 
             severity = int(severity)
 
@@ -213,7 +213,7 @@ class TheHive(AppBase):
             ret = self.thehive.create_alert(alert)
             return ret.text
         except requests.exceptions.ConnectionError as e:
-            return "ConnectionError: %s" % e
+            return f"ConnectionError: {e}"
 
     def create_alert_artifact(
         self,
@@ -231,22 +231,12 @@ class TheHive(AppBase):
     ):
         self.thehive = TheHiveApi(url, apikey, cert=False, version=4)
 
-        if tlp:
-            tlp = int(tlp)
-        else:
-            tlp = 2
-
+        tlp = int(tlp) if tlp else 2
         ioc = ioc.lower().strip() == "true"
         sighted = sighted.lower().strip() == "true"
         ignoreSimilarity = ignoreSimilarity.lower().strip() == "true"
 
-        if tags:
-            tags = [x.strip() for x in tags.split(",")]
-        else:
-            tags = []
-
-
-
+        tags = [x.strip() for x in tags.split(",")] if tags else []
         alert_artifact = thehive4py.models.AlertArtifact(
             dataType=dataType,
             data=data,
@@ -261,7 +251,7 @@ class TheHive(AppBase):
         try:
             ret = self.thehive.create_alert_artifact(alert_id, alert_artifact)
         except requests.exceptions.ConnectionError as e:
-            return "ConnectionError: %s" % e
+            return f"ConnectionError: {e}"
         if ret.status_code > 299:
             raise ConnectionError(ret.text)
 
@@ -274,7 +264,7 @@ class TheHive(AppBase):
         newstr = ""
         ret = ""
         if field_type.lower() == "alert":
-            ret = self.thehive.get_alert(cur_id + "?similarity=1")
+            ret = self.thehive.get_alert(f"{cur_id}?similarity=1")
         elif field_type.lower() == "case":
             ret = self.thehive.get_case(cur_id)
         elif field_type.lower() == "case_observables":
@@ -292,10 +282,8 @@ class TheHive(AppBase):
         elif field_type.lower() == "task_logs":
             ret = self.thehive.get_task_logs(cur_id)
         else:
-            return (
-                "%s is not implemented. See https://github.com/frikky/shuffle-apps for more info."
-                % field_type
-            )
+            return f"{field_type} is not implemented. See https://github.com/frikky/shuffle-apps for more info."
+
 
         return ret.text
 
@@ -316,56 +304,52 @@ class TheHive(AppBase):
 
     def merge_alert_into_case(self, apikey, url, alert_id, case_id):
         self.thehive = TheHiveApi(url, apikey, cert=False)
-        req = url + f"/api/alert/{alert_id}/merge/{case_id}"
+        req = f"{url}/api/alert/{alert_id}/merge/{case_id}"
         ret = requests.post(req, auth=self.thehive.auth)
         return ret.text
 
     # Not sure what the data should be
     def update_field(self, apikey, url, field_type, cur_id, field, data):
         # This is kinda silly but..
-        if field_type.lower() == "alert":
-            newdata = {}
+        if field_type.lower() != "alert":
+            return f"{field_type} is not implemented. See https://github.com/frikky/walkoff-integrations for more info."
 
-            if data.startswith("%s"):
-                ticket = self.thehive.get_alert(cur_id)
-                if ticket.status_code != 200:
-                    pass
+        newdata = {}
 
-                newdata[field] = "%s%s" % (ticket.json()[field], data[2:])
-            else:
-                newdata[field] = data
+        if data.startswith("%s"):
+            ticket = self.thehive.get_alert(cur_id)
+            newdata[field] = f"{ticket.json()[field]}{data[2:]}"
+        else:
+            newdata[field] = data
 
             # Bleh
-            url = "%s/api/alert/%s" % (url, cur_id)
-            if field == "status":
-                if data == "New" or data == "Updated":
-                    url = "%s/markAsUnread" % url
-                elif data == "Ignored":
-                    url = "%s/markAsRead" % url
+        url = f"{url}/api/alert/{cur_id}"
+        if field == "status":
+            if data in ["New", "Updated"]:
+                url = f"{url}/markAsUnread"
+            elif data == "Ignored":
+                url = f"{url}/markAsRead"
 
-                ret = requests.post(
-                    url,
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer %s" % apikey,
-                    },
-                )
-            else:
-                ret = requests.patch(
-                    url,
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer %s" % apikey,
-                    },
-                    json=newdata,
-                )
-
-            return str(ret.status_code)
-        else:
-            return (
-                "%s is not implemented. See https://github.com/frikky/walkoff-integrations for more info."
-                % field_type
+            ret = requests.post(
+                url,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {apikey}",
+                },
             )
+
+        else:
+            ret = requests.patch(
+                url,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {apikey}",
+                },
+                json=newdata,
+            )
+
+
+        return str(ret.status_code)
 
     # https://github.com/TheHive-Project/TheHiveDocs/tree/master/api/connectors/cortex
     def run_analyzer(self, apikey, url, cortex_id, analyzer_id, artifact_id):
@@ -377,9 +361,7 @@ class TheHive(AppBase):
         if filedata["success"] == False:
             return "No file to upload. Skipping message."
 
-        headers = {
-            "Authorization": "Bearer %s" % apikey,
-        }
+        headers = {"Authorization": f"Bearer {apikey}"}
 
         files = {}
         if len(filedata["data"]) > 0:
@@ -389,11 +371,12 @@ class TheHive(AppBase):
 
         data = {"_json": """{"message": "%s"}""" % message}
         response = requests.post(
-            "%s/api/case/task/%s/log" % (url, task_id),
+            f"{url}/api/case/task/{task_id}/log",
             headers=headers,
             files=files,
             data=data,
         )
+
         return response.text
 
     # Creates an observable as a file in a case
@@ -401,9 +384,7 @@ class TheHive(AppBase):
         if filedata["success"] == False:
             return "No file to upload. Skipping message."
 
-        headers = {
-            "Authorization": "Bearer %s" % apikey,
-        }
+        headers = {"Authorization": f"Bearer {apikey}"}
 
         if tags:
             if ", " in tags:
@@ -420,13 +401,14 @@ class TheHive(AppBase):
             }
 
         outerarray = {"dataType": "file", "tags": tags}
-        data = {"_json": """%s""" % json.dumps(outerarray)}
+        data = {"_json": f"""{json.dumps(outerarray)}"""}
         response = requests.post(
-            "%s/api/case/%s/artifact" % (url, case_id),
+            f"{url}/api/case/{case_id}/artifact",
             headers=headers,
             files=files,
             data=data,
         )
+
         return response.text
 
 

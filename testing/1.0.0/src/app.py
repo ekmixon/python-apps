@@ -50,17 +50,17 @@ class HelloWorld(AppBase):
         return "Waited %d seconds" % seconds
 
     def get_type(self, value):
-        return "Type: %s" % type(value)
+        return f"Type: {type(value)}"
 
     def input_options_test(self, call):
-        return "Value: %s" % call 
+        return f"Value: {call}" 
 
     def get_file_value(self, filedata):
-        if filedata == None:
+        if filedata is None:
             return "File is empty?"
-        
-        print("INSIDE APP DATA: %s" % filedata)
-        return "%s" % filedata["data"].decode()
+
+        print(f"INSIDE APP DATA: {filedata}")
+        return f'{filedata["data"].decode()}'
 
     def create_file(self, filename, data):
         print("Inside function")
@@ -70,8 +70,7 @@ class HelloWorld(AppBase):
         }
 
         fileret = self.set_files([filedata])
-        value = {"success": True, "file_ids": fileret}
-        return value 
+        return {"success": True, "file_ids": fileret} 
         #print("Done with upload function")
 
         #return ("Successfully put your data in a file", filedata)
@@ -83,18 +82,19 @@ class HelloWorld(AppBase):
             "data": ret.content,
         }])
 
-        value = {"success": True, "file_ids": fileret}
-        return value 
+        return {"success": True, "file_ids": fileret} 
 
         #return ("Successfully put your data in a file", filedata)
 
     def delete_file(self, file_id):
-        headers = {
-            "Authorization": "Bearer %s" % self.authorization,
-        }
-        print("HEADERS: %s" % headers)
+        headers = {"Authorization": f"Bearer {self.authorization}"}
+        print(f"HEADERS: {headers}")
 
-        ret = requests.delete("%s/api/v1/files/%s?execution_id=%s" % (self.base_url, file_id, self.current_execution_id), headers=headers)
+        ret = requests.delete(
+            f"{self.base_url}/api/v1/files/{file_id}?execution_id={self.current_execution_id}",
+            headers=headers,
+        )
+
         return ret.text
 
 if __name__ == "__main__":

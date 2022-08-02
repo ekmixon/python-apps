@@ -40,18 +40,13 @@ class exchange_powershell(AppBase):
 
             if not record and not line.startswith("{") and not line.startswith("["):
                 skipped += 1
-        
+
             if record:
                 newlines.append(line)
-        
+
 
         print(f"SKIPPED {skipped} lines")
-        if len(newlines) == 0:
-            return item
-
-        item = "\n".join(newlines)
-
-        return item
+        return "\n".join(newlines) if newlines else item
 
     def replace_and_run(self, username, password, parsed_command):
         data = ""
@@ -69,7 +64,7 @@ class exchange_powershell(AppBase):
         with open(self.filename, "w+") as tmp:
             tmp.write(data)
 
-        command = f"pwsh -file {self.filename}" 
+        command = f"pwsh -file {self.filename}"
         print(f"PRE POPEN: {command}")
         process = subprocess.Popen(
             command,
@@ -84,11 +79,11 @@ class exchange_powershell(AppBase):
         item = ""
         if len(stdout[0]) > 0:
             item = stdout[0]
-            print("Succesfully ran bash. Stdout: %s" % item)
+            print(f"Succesfully ran bash. Stdout: {item}")
         else:
             item = stdout[1]
-            print("FAILED to run bash. Stdout: %s!" % item)
-            #return item
+            print(f"FAILED to run bash. Stdout: {item}!")
+                #return item
 
         try:
             new_cleanup = self.cleanup(item)
@@ -108,22 +103,20 @@ class exchange_powershell(AppBase):
     def release_quarantine_message(self, username, password, message_id):
         parsed_command = f"Release-QuarantineMessage -Identity {message_id} | ConvertTo-Json"
 
-        ret = self.replace_and_run(username, password, parsed_command)
-        return ret 
+        return self.replace_and_run(username, password, parsed_command) 
 
     # Write your data inside this function
     def preview_quarantine_message(self, username, password, message_id):
         parsed_command = f"Preview-QuarantineMessage -Identity {message_id} | ConvertTo-Json"
 
-        ret = self.replace_and_run(username, password, parsed_command)
-        return ret 
+        return self.replace_and_run(username, password, parsed_command) 
 
     # Write your data inside this function
     def export_quarantine_message(self, username, password, message_id, skip_upload="false"):
         parsed_command = f"Export-QuarantineMessage -Identity {message_id} | ConvertTo-Json"
 
         ret = self.replace_and_run(username, password, parsed_command)
-        print("RET: %s" % ret)
+        print(f"RET: {ret}")
         try:
             ret = json.loads(ret)
         except json.decoder.JSONDecodeError:
@@ -134,7 +127,7 @@ class exchange_powershell(AppBase):
             return file_eml
 
         message_bytes = base64.b64decode(file_eml)
-        
+
         fileinfo = self.set_files({
             "filename": f"{message_id}.eml", 
             "data": message_bytes 
@@ -151,32 +144,28 @@ class exchange_powershell(AppBase):
     def delete_quarantine_message(self, username, password, message_id):
         parsed_command = f"Delete-QuarantineMessage -Identity {message_id} | ConvertTo-Json"
 
-        ret = self.replace_and_run(username, password, parsed_command)
-        return ret 
+        return self.replace_and_run(username, password, parsed_command) 
 
     # Write your data inside this function
     def get_quarantine_message(self, username, password, message_id):
         parsed_command = f"Get-QuarantineMessage {message_id} | ConvertTo-Json"
 
-        ret = self.replace_and_run(username, password, parsed_command)
-        return ret 
+        return self.replace_and_run(username, password, parsed_command) 
 
     # Write your data inside this function
     def get_quarantine_messages(self, username, password, time_from, time_to):
         #parsed_command = f"Get-QuarantineMessage -StartReceivedDate {time_from} -EndReceivedDate {time_to} | ConvertTo-Json"
         #parsed_command = f"Get-QuarantineMessage -StartReceivedDate {time_from} -EndReceivedDate {time_to}"
-        parsed_command = f"Get-QuarantineMessage -PageSize 50 -Page 1"
+        parsed_command = "Get-QuarantineMessage -PageSize 50 -Page 1"
 
 
-        ret = self.replace_and_run(username, password, parsed_command)
-        return ret 
+        return self.replace_and_run(username, password, parsed_command) 
 
     # Write your data inside this function
     def get_quarantine_messageheaders(self, username, password, message_id):
         parsed_command = f"Get-QuarantineMessageHeader {message_id} | ConvertTo-Json"
 
-        ret = self.replace_and_run(username, password, parsed_command)
-        return ret 
+        return self.replace_and_run(username, password, parsed_command) 
 
 if __name__ == "__main__":
     exchange_powershell.run()

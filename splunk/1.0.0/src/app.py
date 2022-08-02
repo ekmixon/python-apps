@@ -33,18 +33,19 @@ class Splunk(AppBase):
         return input_data 
 
     def run_search(self, auth, url, query):
-        url = '%s/services/search/jobs?output_mode=json' % (url)
-        ret = requests.post(url, auth=auth, data=query, timeout=self.timeout, verify=False)
-        return ret
+        url = f'{url}/services/search/jobs?output_mode=json'
+        return requests.post(
+            url, auth=auth, data=query, timeout=self.timeout, verify=False
+        )
 
     def get_search(self, auth, url, search_sid):
         # Wait for search to be done?
-        firsturl = '%s/services/search/jobs/%s?output_mode=json' % (url, search_sid)
-        print("STARTED FUNCTION WITH URL %s" % firsturl)
+        firsturl = f'{url}/services/search/jobs/{search_sid}?output_mode=json'
+        print(f"STARTED FUNCTION WITH URL {firsturl}")
         time.sleep(0.2)
         maxrunduration = 30
         ret = "No results yet"
-        while(True):
+        while True:
             try:
                 ret = requests.get(firsturl, auth=auth, timeout=self.timeout, verify=False)
             except requests.exceptions.ConnectionError:
@@ -62,8 +63,8 @@ class Splunk(AppBase):
             try:
                 if content["resultCount"] > 0 or content["isDone"] or content["isFinalized"] or content["runDuration"] > maxrunduration:
                     print("CONTENT PRE EVENTS: ", content)
-                    eventsurl = '%s/services/search/jobs/%s/events' % (url, search_sid)
-                    print("Running events check towards %s" % eventsurl)
+                    eventsurl = f'{url}/services/search/jobs/{search_sid}/events'
+                    print(f"Running events check towards {eventsurl}")
                     try:
                         newret = requests.get(eventsurl, auth=auth, timeout=self.timeout, verify=False)
                         if ret.status_code < 300 and ret.status_code >= 200:
@@ -71,13 +72,13 @@ class Splunk(AppBase):
                         else:
                             return "Bad status code for events: %sd", ret.status_code
                     except requests.exceptions.ConnectionError:
-                        return "Events requesterror: %s" % e
+                        return f"Events requesterror: {e}"
             except KeyError:
                 try:
                     return ret.json()["messages"]
                 except KeyError as e:
-                    return "KeyError: %s" % e
-                
+                    return f"KeyError: {e}"
+
             time.sleep(1)
 
         return ret
@@ -87,20 +88,21 @@ class Splunk(AppBase):
 
         # "latest_time": "now"
         query = {
-            "search": "| search %s" % query,
+            "search": f"| search {query}",
             "exec_mode": "normal",
             "count": result_limit,
             "earliest_time": earliest_time,
-            "latest_time": latest_time
+            "latest_time": latest_time,
         }
 
-        print("Current search: %s" % query["search"])
+
+        print(f'Current search: {query["search"]}')
 
         try:
             ret = self.run_search(auth, url, query)
         except requests.exceptions.ConnectTimeout as e:
-            print("Timeout: %s" % e)
-            return "Timeout: %s" % e
+            print(f"Timeout: {e}")
+            return f"Timeout: {e}"
 
         if ret.status_code != 201:
             print("Bad status code: %d" % ret.status_code)
@@ -108,7 +110,7 @@ class Splunk(AppBase):
 
         search_id = ret.json()["sid"]
 
-        print("Search ID: %s" % search_id)
+        print(f"Search ID: {search_id}")
 
         ret = self.get_search(auth, url, search_id)
         return ret

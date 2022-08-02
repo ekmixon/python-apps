@@ -73,12 +73,8 @@ class MSExcel(AppBase):
         graph_url = "https://graph.microsoft.com"
         session = self.authenticate(tenant_id, client_id, client_secret, graph_url)
         graph_url = f"https://graph.microsoft.com/v1.0/users/{user_id}/drive/items/{file_id}/workbook/worksheets"
-        if len(name)!=0:
-            body = {
-                "name": name
-                }
-        else:
-            body = {}
+        body = {"name": name} if len(name) != 0 else {}
+
         ret = session.post(graph_url, json = body)
         return ret.text
 
@@ -98,9 +94,7 @@ class MSExcel(AppBase):
         graph_url = f"https://graph.microsoft.com/v1.0/users/{user_id}/drive/items/{file_id}/workbook/worksheets/{sheet_name}/range(address='{address}')"
         lt = []
         for i in value.split(';'):
-            temp_var = []
-            for j in i.split(','):
-                temp_var.append(j)
+            temp_var = list(i.split(','))
             lt.append(temp_var)
         body = {
             "values":lt
@@ -122,37 +116,37 @@ class MSExcel(AppBase):
         filedata = self.get_file(file_id)
         if filedata["success"] != True:
             return filedata
-    
+
         basename = "file.xlsx"
         with open(basename, "wb") as tmp:
             tmp.write(filedata["data"])
-    
+
         if sheet == "":
             sheet = "Sheet1"
-    
+
         #wb = Workbook(basename)
         wb = load_workbook(basename)
-        print("Sheets: %s" % wb.sheetnames)
-    
+        print(f"Sheets: {wb.sheetnames}")
+
         # grab the active worksheet
         ws = wb.active
         for item in ws.iter_rows():
             print(item)
-    
+
         csvdata = ""
         for row in ws.values:
             for value in row:
                 #print(value)
-                if value == None:
+                if value is None:
                     csvdata += ","
                 elif isinstance(value, str):
-                    csvdata += value+","
+                    csvdata += f"{value},"
                 else:
-                    csvdata += str(value)+","
-    
+                    csvdata += f"{str(value)},"
+
             csvdata = csvdata[:-1]+"\n"
         csvdata = csvdata[:-1]
-    
+
         print()
         print("Data:\n%s\n" % csvdata)
 
@@ -164,11 +158,11 @@ class MSExcel(AppBase):
             print(f"Bad info from file: {filedata}") 
             return filedata
         #filedata = file_id
-    
+
         basename = "file.xlsx"
         with open(basename, "wb") as tmp:
             tmp.write(filedata["data"])
-    
+
         #wb = Workbook(basename)
         try:
             wb = load_workbook(basename)
@@ -176,37 +170,38 @@ class MSExcel(AppBase):
             return {
                 "success": False,
                 "reason": "The file is invalid. Are you sure it's a valid excel file?",
-                "exception": "Error: %s" % e,
+                "exception": f"Error: {e}",
             }
 
-        print("Sheets: %s" % wb.sheetnames)
-    
+
+        print(f"Sheets: {wb.sheetnames}")
+
         output_data = []
         for ws in wb.worksheets:
             print(f"Title: {ws.title}")
-    
+
             # grab the active worksheet
             csvdata = ""
             for row in ws.values:
                 for value in row:
                     #print(value)
-                    if value == None:
+                    if value is None:
                         csvdata += ","
                     elif isinstance(value, str):
-                        csvdata += value+","
+                        csvdata += f"{value},"
                     else:
-                        csvdata += str(value)+","
-    
+                        csvdata += f"{str(value)},"
+
                 csvdata = csvdata[:-1]+"\n"
             csvdata = csvdata[:-1]
-    
+
             print()
             print("Data:\n%s\n" % csvdata)
             output_data.append({
                 "sheet": ws.title,
                 "data": csvdata,
             })
-    
+
         return output_data
         
 if __name__ == "__main__":

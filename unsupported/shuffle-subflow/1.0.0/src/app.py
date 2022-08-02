@@ -30,8 +30,8 @@ class Subflow(AppBase):
     #    if len(sms) > 0:
 
     def run_subflow(self, user_apikey, workflow, argument, source_workflow="", source_execution="", source_node="", source_auth="", startnode=""):
-        print("STARTNODE: %s" % startnode)
-        url = "%s/api/v1/workflows/%s/execute" % (self.url, workflow)
+        print(f"STARTNODE: {startnode}")
+        url = f"{self.url}/api/v1/workflows/{workflow}/execute"
 
         params = {}
         if len(source_workflow) > 0:
@@ -59,9 +59,7 @@ class Subflow(AppBase):
         else:
             print("No startnode")
 
-        headers = {
-            "Authorization": "Bearer %s" % user_apikey,
-        }
+        headers = {"Authorization": f"Bearer {user_apikey}"}
 
         if len(argument) == 0:
             ret = requests.post(url, headers=headers, params=params)
@@ -78,14 +76,9 @@ class Subflow(AppBase):
                     print("Successfully sent as data (3)")
 
         print("Status: %d" % ret.status_code)
-        print("RET: %s" % ret.text)
+        print(f"RET: {ret.text}")
 
         return ret.text
-
-        # This logs to the docker logs
-        #self.logger.info(message)
-
-        return message
 
 if __name__ == "__main__":
     Subflow.run()

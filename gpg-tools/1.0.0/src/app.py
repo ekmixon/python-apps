@@ -36,7 +36,7 @@ class Gpg(AppBase):
     ):
         if filedata["success"] == False:
             return "Error managing files."
-        always_trust = True if always_trust.lower() == "true" else False
+        always_trust = always_trust.lower() == "true"
 
         gpg = gnupg.GPG(gnupghome=os.path.join("/app/local/", gpg_home))
         gpg.decrypt_file(
@@ -71,13 +71,12 @@ class Gpg(AppBase):
             except SyntaxError:
                 return "Recipients must be a list."
 
-        always_trust = True if always_trust.lower() == "true" else False
+        always_trust = always_trust.lower() == "true"
 
         print(
-            "Using:\n\thome: {}\n\trecipients: {}\n\ttrust: {}".format(
-                os.path.join("/app/local/", gpg_home), recipients, always_trust
-            )
+            f'Using:\n\thome: {os.path.join("/app/local/", gpg_home)}\n\trecipients: {recipients}\n\ttrust: {always_trust}'
         )
+
 
         gpg = gnupg.GPG(
             gnupghome=os.path.join("/app/local/", gpg_home), gpgbinary="/usr/bin/gpg"

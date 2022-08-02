@@ -26,7 +26,7 @@ class GoogleChat(AppBase):
         payload = {'text': str(message)}
         # If a thread is specified, add the threakKey query parameter
         if threadKey != "":
-            threadKey = "&threadKey=" + threadKey
+            threadKey = f"&threadKey={threadKey}"
         r = requests.request("POST", webhook_url+threadKey,
                              headers=headers, json=payload)
         if r.status_code == 200:
@@ -38,24 +38,24 @@ class GoogleChat(AppBase):
         headers = {'Content-Type': 'application/json'}
         # If a thread is specified, add the threakKey query parameter
         if threadKey != "":
-            threadKey = "&threadKey=" + threadKey
+            threadKey = f"&threadKey={threadKey}"
         # some custom conditions for different card style
         # Default is Shuffle
-        if app == "PrismaCloud":
-            title = "Prisma Cloud"
-            imageUrl = "https://pan.dev/img/prismalogo.png"
-        elif app == "TheHive":
-            title = "TheHive"
-            imageUrl = "https://docs.thehive-project.org/images/thehive.png"
+        if app == "AWSWAF":
+            title = "AWS WAF"
+            imageUrl = "https://seeklogo.com/images/A/aws-waf-web-application-firewall-logo-03144CA778-seeklogo.com.png"
         elif app == "CVE":
             title = "CVE"
             imageUrl = "https://pbs.twimg.com/profile_images/1334143546656493570/HgSlWtjG_400x400.jpg"
-        elif app == "AWSWAF":
-            title = "AWS WAF"
-            imageUrl = "https://seeklogo.com/images/A/aws-waf-web-application-firewall-logo-03144CA778-seeklogo.com.png"
+        elif app == "PrismaCloud":
+            title = "Prisma Cloud"
+            imageUrl = "https://pan.dev/img/prismalogo.png"
         elif app == "Splunk":
             title = "Splunk"
             imageUrl = "https://www.cb1security.com/wp-content/uploads/2018/09/Splunk-Logo.png"
+        elif app == "TheHive":
+            title = "TheHive"
+            imageUrl = "https://docs.thehive-project.org/images/thehive.png"
         else:
             title = "Shuffle"
             imageUrl = "https://pbs.twimg.com/profile_images/1294997017622536193/xIv5yf0g.jpg"

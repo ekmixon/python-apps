@@ -21,8 +21,7 @@ class Ansible(AppBase):
         super().__init__(redis, logger, console_logger)
 
     def run_playbook(self, playbook):
-        filedata = self.get_file(playbook)
-        return filedata
+        return self.get_file(playbook)
 
 if __name__ == "__main__":
     Ansible.run()

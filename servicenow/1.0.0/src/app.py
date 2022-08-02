@@ -23,10 +23,10 @@ class Servicenow(AppBase):
     def send_request(self, url, username, password, path, method='get', body=None, params=None, headers=None, json=None, files=None):
         body = body if body is not None else {}
         params = params if params is not None else {}
-    
-        url = '{}{}'.format(url, path)
-        print("HEADERS: %s" % headers)
-        if not headers and files == None:
+
+        url = f'{url}{path}'
+        print(f"HEADERS: {headers}")
+        if not headers and files is None:
             headers = {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
@@ -46,28 +46,25 @@ class Servicenow(AppBase):
                 try:
                     res = requests.request(method, url, headers=headers, params=params, data=body, files=files, json=json, auth=(username, password))
                 except requests.exceptions.ReadTimeout as e:
-                    return "Readtimeout: %s" % e
+                    return f"Readtimeout: {e}"
                 except requests.exceptions.ConnectionError as e:
-                    return "ConnectionError: %s" % e
+                    return f"ConnectionError: {e}"
 
-                #shutil.rmtree(demisto.getFilePath(file_entry)['name'], ignore_errors=True)
+                        #shutil.rmtree(demisto.getFilePath(file_entry)['name'], ignore_errors=True)
             except Exception as e:
-                return 'Failed to upload file - ' + str(e)
+                return f'Failed to upload file - {str(e)}'
         else:
             try:
                 res = requests.request(method, url, headers=headers, data=json.dumps(body) if body else {}, json=json, params=params, auth=(username, password))
             except requests.exceptions.ReadTimeout as e:
-                return "Readtimeout: %s" % e
+                return f"Readtimeout: {e}"
             except requests.exceptions.ConnectionError as e:
-                return "ConnectionError: %s" % e
-    
+                return f"ConnectionError: {e}"
+
         try:
             obj = res.json()
         except Exception as e:
-            if not res.content:
-                return ''
-            return 'Error parsing reply - {} - {}'.format(res.content, str(e))
-    
+            return f'Error parsing reply - {res.content} - {str(e)}' if res.content else ''
         if 'error' in obj:
             message = obj.get('error', {}).get('message')
             details = obj.get('error', {}).get('detail')
@@ -76,11 +73,12 @@ class Servicenow(AppBase):
                     # Return an empty results array
                     'result': []
                 }
-            return 'ServiceNow Error: {}, details: {}'.format(message, details)
-    
+            return f'ServiceNow Error: {message}, details: {details}'
+
         if res.status_code < 200 or res.status_code >= 300:
-            return 'Got status code {} with url {} with body {} with headers {}'.format(str(res.status_code), url, str(res.content), str(res.headers))
-    
+            return f'Got status code {str(res.status_code)} with url {url} with body {str(res.content)} with headers {str(res.headers)}'
+
+
         #print("RES: %s" % res)
         #print("TEXT: %s" % res.text)
         return res.text
@@ -89,9 +87,9 @@ class Servicenow(AppBase):
         path = None
         query_params = {}  # type: Dict
         if sys_id:
-            path = "/api/now/v1/table/%s/%s" % (table_name, sys_id)
+            path = f"/api/now/v1/table/{table_name}/{sys_id}"
         elif number:
-            path = '/api/now/v1/table/%s' % table_name
+            path = f'/api/now/v1/table/{table_name}'
             query_params = {
                 'number': number
             }
@@ -99,16 +97,16 @@ class Servicenow(AppBase):
             # Only in cases where the table is of type ticket
             return 'servicenow-get-ticket requires either ticket ID or ticket number'
 
-        print("PATH: %s" % path)
+        print(f"PATH: {path}")
         return self.send_request(url, username, password, path, 'get', params=query_params)
     
     def list_table(self, url, username, password, table_name, limit=1):
         query_params = {
             "sysparm_limit": limit,     
         }  
-    
-        #path = '/table/%s' % table_name 
-        path = "/api/now/v1/table/%s" % table_name
+
+        #path = '/table/%s' % table_name
+        path = f"/api/now/v1/table/{table_name}"
 
         return self.send_request(url, username, password, path, 'get', params=query_params)
 
@@ -120,9 +118,9 @@ class Servicenow(AppBase):
                 return {"success": False, "reason": e} 
         else:
             data = body
-            
 
-        path = "/api/now/v1/table/%s" % table_name
+
+        path = f"/api/now/v1/table/{table_name}"
         query_params = {}
         base_request = self.send_request(url, username, password, path, 'post', params=query_params, json=data)
 
@@ -157,9 +155,9 @@ class Servicenow(AppBase):
                 return {"success": False, "reason": e} 
         else:
             data = body
-            
 
-        path = "/api/now/v1/table/%s/%s" % (table_name, sys_id)
+
+        path = f"/api/now/v1/table/{table_name}/{sys_id}"
         query_params = {}
         base_request = self.send_request(url, username, password, path, 'patch', params=query_params, json=data)
 
@@ -188,17 +186,17 @@ class Servicenow(AppBase):
 
 # Run the actual thing after we've checked params
 def run(request):
-    action = request.get_json() 
+    action = request.get_json()
     print(action)
     print(type(action))
     authorization_key = action.get("authorization")
     current_execution_id = action.get("execution_id")
-	
+
     if action and "name" in action and "app_name" in action:
         Servicenow.run(action)
-        return f'Attempting to execute function {action["name"]} in app {action["app_name"]}' 
+        return f'Attempting to execute function {action["name"]} in app {action["app_name"]}'
     else:
-        return f'Invalid action'
+        return 'Invalid action'
 
 if __name__ == "__main__":
     Servicenow.run()

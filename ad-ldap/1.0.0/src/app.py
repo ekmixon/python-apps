@@ -21,9 +21,9 @@ class ADLDAP(AppBase):
     # Write your data inside this function
     def search_samaccountname(self, domain_name, server_name, user_name, password, samaccountname, search_base, port, use_ssl):
 
-        user = '{}\\{}'.format(domain_name, user_name)
+        user = f'{domain_name}\\{user_name}'
         port = int(port)
-        use_ssl = False if use_ssl.lower() == "false" else True
+        use_ssl = use_ssl.lower() != "false"
 
         conn = Connection(Server(server_name, port=port, use_ssl=use_ssl), auto_bind=AUTO_BIND_NO_TLS, user=user, password=password)
 

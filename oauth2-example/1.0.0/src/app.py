@@ -32,8 +32,9 @@ class Oauth2Example(AppBase):
         s = requests.Session()
         s.headers = {
             "Content-Type": "application/json",
-            "Authorization": "Bearer %s" % access_token
+            "Authorization": f"Bearer {access_token}",
         }
+
 
         return s
 
@@ -42,7 +43,8 @@ class Oauth2Example(AppBase):
         graph_url = "https://graph.microsoft.com"
         session = self.authenticate(access_token, refresh_token)
 
-        url = "https://graph.microsoft.com/beta/users/%s/authentication/passwordMethods/%s/resetPassword" % (userId, passwordId)
+        url = f"https://graph.microsoft.com/beta/users/{userId}/authentication/passwordMethods/{passwordId}/resetPassword"
+
         response = session.post(url)
         print(response.status_code)
         return response.text

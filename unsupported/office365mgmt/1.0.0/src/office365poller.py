@@ -28,7 +28,7 @@ def pollOffice(planType,tenantID,clientID,clientSecret,pollInterval):
     if "" in [planType,tenantID,clientID,clientSecret]:
         print("Issue with credentials, exiting")
         return "Credentials or variables missing"
-    
+
     if planType == "Enterprise":
         #Login and Base urls are unique per plan type
         loginURL = "https://login.windows.net"
@@ -50,27 +50,27 @@ def pollOffice(planType,tenantID,clientID,clientSecret,pollInterval):
         print("Please specify plan type in config file, exiting.")
         exit(1)
 
-    scope = mgmtEndpoint + '/.default'
-    
+    scope = f'{mgmtEndpoint}/.default'
+
     #url-form-encoded data for auth
     payload = {'client_id': clientID,
                      'scope': scope,
                       'client_secret': clientSecret,
                       'grant_type': 'client_credentials'}
 
-    authURL = loginURL + '/' + tenantID + '/oauth2/v2.0/token'
+    authURL = f'{loginURL}/{tenantID}/oauth2/v2.0/token'
 
     #make request for token
     resp = requests.post(authURL, data=payload)
     if resp.status_code != 200:
         print("Authentication error has occurred: ", resp.json())
-        return "Auth error occurred" + str(resp.json())
+        return f"Auth error occurred{str(resp.json())}"
     json_resp = resp.json()
     access_token = json_resp['access_token']
 
     #build api request now that we are authenticated
-    base_url = mgmtEndpoint + '/api/v1.0/' + tenantID + '/activity/feed'
-    auth_header = 'Bearer ' + access_token
+    base_url = f'{mgmtEndpoint}/api/v1.0/{tenantID}/activity/feed'
+    auth_header = f'Bearer {access_token}'
     headers = {
         'User-Agent' : "Stratozen",
         'Accept' : 'application/json',
@@ -136,7 +136,7 @@ def pollOffice(planType,tenantID,clientID,clientSecret,pollInterval):
         #Call list available content function and process any data
         sub_data = processContent(content_type,base_url, headers,tenantID,start_time_str,end_time_str)
         if sub_data is not None:
-            json_data.update(sub_data) #assumes json dict is returned
+            json_data |= sub_data
 
     #Finally, return all the data
     #Return data
@@ -145,7 +145,7 @@ def pollOffice(planType,tenantID,clientID,clientSecret,pollInterval):
     
 def subscriptionList(base_url,headers,tenantID):
     #Lists available O365 subscriptions, returns list of available subscriptions
-    listURL = base_url + "/subscriptions/list"
+    listURL = f"{base_url}/subscriptions/list"
     payload = {'PublisherIdentifier': tenantID}
 
     resp = requests.get(listURL, headers=headers,params=payload)
@@ -153,16 +153,15 @@ def subscriptionList(base_url,headers,tenantID):
     if resp.status_code == 200:
         #return json data
         return resp.json()
-    else:
-        print("Error occured while listing subscription: ",resp.json())
-        return None
+    print("Error occured while listing subscription: ",resp.json())
+    return None
 
 def subscriptionStart(base_url,headers,content_type,tenantID):
     #Starts a subscription - return true on success
     start_sub_payload = {'contentType': content_type,
                                       'PublisherIdentifier': tenantID}
     #Call URL
-    start_sub_url = base_url + '/subscriptions/start'
+    start_sub_url = f'{base_url}/subscriptions/start'
 
     resp = requests.post(start_sub_url, headers=headers,params=start_sub_payload)
 
@@ -181,52 +180,52 @@ def subscriptionStart(base_url,headers,content_type,tenantID):
 
 def processContent(content_type,base_url,headers,tenantID,start_time,end_time):
 
-        json_data = {} #empty dict
-        #List content from given subscription
-        print("Listing Content for content type: ",content_type,"\n\n\n")
-        list_avail_content_url = base_url + '/subscriptions/content'
-        list_content_payload = {'contentType' : content_type,
-                                              'PublisherIdentifier': tenantID,
-                                              'startTime' : start_time,
-                                              'endTime' : end_time}
-        #List if available content exists for given contentType
-        resp = requests.get(list_avail_content_url, headers=headers,params=list_content_payload)
-        resp_json = resp.json()
-        if resp.status_code == 200:
+    json_data = {} #empty dict
+    #List content from given subscription
+    print("Listing Content for content type: ",content_type,"\n\n\n")
+    list_avail_content_url = f'{base_url}/subscriptions/content'
+    list_content_payload = {'contentType' : content_type,
+                                          'PublisherIdentifier': tenantID,
+                                          'startTime' : start_time,
+                                          'endTime' : end_time}
+    #List if available content exists for given contentType
+    resp = requests.get(list_avail_content_url, headers=headers,params=list_content_payload)
+    resp_json = resp.json()
+    if resp.status_code == 200:
             #Iterate content objects
             #print("Data: ", resp_json)
-            print("List URL: ", str(resp.url))
+        print("List URL: ", resp.url)
             #Call content and process it
-            for content_object in resp_json:
-                content_uri = content_object['contentUri']
-                cont_resp = requests.get(content_uri, headers=headers)
-                cont_resp_json = cont_resp.json()
-                for event in cont_resp_json:
-                    json_data.update(processEvent(event))
-            #Check for next page of data and call it
-            while 'NextPageUri' in resp.headers:
-                #As long as pagination returns more data process it
-                print("Next URL is: ",resp.headers['NextPageUri'])
-                resp = requests.get(resp.headers['NextPageUri'], headers=headers)
-                if resp.status_code == 200:
-                    #Iterate content objects
-                    #Call content and process it
-                    for content_object in resp.json():
-                        content_uri = content_object['contentUri']
-                        cont_resp = requests.get(content_uri, headers=headers)
-                        cont_resp_json = cont_resp.json()
-                        #print("Header info test: ",cont_resp.headers)
-                        for event in cont_resp_json:
-                            print("Processing Event: ")
-                            json_data.update(processEvent(event))
-                else:
-                    print("Some error occurred: ", resp.json())
-                
-        else:
-            print("Some error occurred: ",resp_json)
+        for content_object in resp_json:
+            content_uri = content_object['contentUri']
+            cont_resp = requests.get(content_uri, headers=headers)
+            cont_resp_json = cont_resp.json()
+            for event in cont_resp_json:
+                json_data |= processEvent(event)
+        #Check for next page of data and call it
+        while 'NextPageUri' in resp.headers:
+            #As long as pagination returns more data process it
+            print("Next URL is: ",resp.headers['NextPageUri'])
+            resp = requests.get(resp.headers['NextPageUri'], headers=headers)
+            if resp.status_code == 200:
+                #Iterate content objects
+                #Call content and process it
+                for content_object in resp.json():
+                    content_uri = content_object['contentUri']
+                    cont_resp = requests.get(content_uri, headers=headers)
+                    cont_resp_json = cont_resp.json()
+                    #print("Header info test: ",cont_resp.headers)
+                    for event in cont_resp_json:
+                        print("Processing Event: ")
+                        json_data.update(processEvent(event))
+            else:
+                print("Some error occurred: ", resp.json())
 
-        #Return json data
-        return json_data
+    else:
+        print("Some error occurred: ",resp_json)
+
+    #Return json data
+    return json_data
 
 def processEvent(event):
     #Takes single json event as argument

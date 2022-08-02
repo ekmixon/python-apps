@@ -29,7 +29,7 @@ class BreachSense(AppBase):
             response = requests.get(url)
             return response.text
         except Exception as e:
-            return "Exception occured: %s" % e
+            return f"Exception occured: {e}"
 
     def Display_Description(self, api_key, search_term, date):
         if date:
@@ -40,7 +40,7 @@ class BreachSense(AppBase):
             response = requests.get(url)
             return response.text
         except Exception as e:
-            return "Exception occured: %s" % e
+            return f"Exception occured: {e}"
 
     def Strict_search(self, api_key, search_term, date):
         if date:
@@ -51,7 +51,7 @@ class BreachSense(AppBase):
             response = requests.get(url)
             return response.text
         except Exception as e:
-            return "Exception occured: %s" % e
+            return f"Exception occured: {e}"
 
     def Check_credits(self, api_key):
         url = f"https://breachsense.io/api?lic={api_key}&r&json"
@@ -59,7 +59,7 @@ class BreachSense(AppBase):
             response = requests.get(url)
             return response.text
         except Exception as e:
-            return "Exception occured: %s" % e
+            return f"Exception occured: {e}"
 
     def Domain_Monitor(self, api_key, action, domain):
         url = f"https://breachsense.io/api?lic={api_key}&action={action}&dom={domain}&json"
@@ -67,7 +67,7 @@ class BreachSense(AppBase):
             response = requests.get(url)
             return response.text
         except Exception as e:
-            return "Exception occured: %s" % e
+            return f"Exception occured: {e}"
 
     def Custom_search(self, api_key, search_term, date, extra_Params):
         if date:
@@ -78,7 +78,7 @@ class BreachSense(AppBase):
             response = requests.get(url)
             return response.text
         except Exception as e:
-            return "Exception occured: %s" % e
+            return f"Exception occured: {e}"
 
 if __name__ == "__main__":
     BreachSense.run()

@@ -33,8 +33,13 @@ class VulnDB(AppBase):
                                               data=authentication_data)
 
         if access_token_response.status_code != 200:
-            raise Exception('VulnDB authentication error: HTTP status code ' +
-                            '{}'.format(access_token_response.status_code))
+            raise Exception(
+                (
+                    'VulnDB authentication error: HTTP status code '
+                    + f'{access_token_response.status_code}'
+                )
+            )
+
         token = access_token_response.json()['access_token']
         self.headers = {'Content-Type': 'application/json',
                         'Authorization': f'Bearer {token}'}
@@ -43,17 +48,24 @@ class VulnDB(AppBase):
         if self.headers == "":
             self.get_auth_headers(ClientID, ClientSecret)
 
-        url = self.API_URL + "/vulnerabilities"
+        url = f"{self.API_URL}/vulnerabilities"
         response = requests.get(url, headers=self.headers)
         if response.status_code != 200:
-            raise Exception('VulnDB latest_20_vulns error: HTTP ' +
-                            '{}'.format(response.status_code) +
-                            ' {}'.format(response.reason) +
-                            ' {} '.format(url))
+            raise Exception(
+                (
+                    (
+                        (
+                            'VulnDB latest_20_vulns error: HTTP '
+                            + f'{response.status_code}'
+                        )
+                        + f' {response.reason}'
+                    )
+                    + f' {url} '
+                )
+            )
 
-        vulnerabilities = response.json()['results']
 
-        return vulnerabilities
+        return response.json()['results']
 
 
 if __name__ == "__main__":

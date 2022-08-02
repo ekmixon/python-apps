@@ -56,52 +56,40 @@ class AWSSES(AppBase):
             replyToAddresses.clear()
 
         try:
-            if data_option == 'Text':
-                response = client.send_email(
-                    Source= source,
+            return (
+                client.send_email(
+                    Source=source,
                     Destination={
                         'ToAddresses': toAddresses,
                         'CcAddresses': ccAddresses,
-                        'BccAddresses': bccAddresses
+                        'BccAddresses': bccAddresses,
                     },
                     Message={
-                        'Subject': {
-                            'Data': subject_data,
-                            'Charset': charset
-                        },
+                        'Subject': {'Data': subject_data, 'Charset': charset},
                         'Body': {
-                            'Text': {
-                                'Data': content,
-                                'Charset': charset
-                            },
-                        }
+                            'Text': {'Data': content, 'Charset': charset},
+                        },
                     },
-                    ReplyToAddresses = replyToAddresses,
+                    ReplyToAddresses=replyToAddresses,
                 )
-                return response
-            else:
-                response = client.send_email(
-                    Source= source,
+                if data_option == 'Text'
+                else client.send_email(
+                    Source=source,
                     Destination={
                         'ToAddresses': toAddresses,
                         'CcAddresses': ccAddresses,
-                        'BccAddresses': bccAddresses
+                        'BccAddresses': bccAddresses,
                     },
                     Message={
-                        'Subject': {
-                            'Data': subject_data,
-                            'Charset': charset
-                        },
+                        'Subject': {'Data': subject_data, 'Charset': charset},
                         'Body': {
-                            'Html': {
-                                'Data': content,
-                                'Charset': charset
-                            },
-                        }
+                            'Html': {'Data': content, 'Charset': charset},
+                        },
                     },
-                    ReplyToAddresses = replyToAddresses,
+                    ReplyToAddresses=replyToAddresses,
                 )
-                return response
+            )
+
         except Exception as e:
             return e
 

@@ -39,17 +39,19 @@ class rcATT(AppBase):
         super().__init__(redis, logger, console_logger)
 
 
-    def save_stix_file(report, title, date, ttps, output_file):
+    def save_stix_file(self, title, date, ttps, output_file):
         """
         Save prediction in a JSON file under STIX format
         """
         if(date == ''):
                 date = "1970-01-01"
-        references = []
-        for key in ttps:
-                if key in clt.ALL_TTPS:
-                        references.append(clt.STIX_IDENTIFIERS[clt.ALL_TTPS.index(key)])
-        file_to_save = sr.save_results_in_file(report, title, date, references)
+        references = [
+            clt.STIX_IDENTIFIERS[clt.ALL_TTPS.index(key)]
+            for key in ttps
+            if key in clt.ALL_TTPS
+        ]
+
+        file_to_save = sr.save_results_in_file(self, title, date, references)
         copyfile(file_to_save, output_file)
 
 
@@ -57,10 +59,10 @@ class rcATT(AppBase):
 
     def get_prediction(self, data):
         report_to_predict = prp.remove_u(data)
-	
+
         # load postprocessingand min-max confidence score for both tactics and techniques predictions
         parameters = joblib.load("classification_tools/data/configuration.joblib")
-        min_prob_tactics = parameters[2][0]	
+        min_prob_tactics = parameters[2][0]
         max_prob_tactics = parameters[2][1]
         min_prob_techniques = parameters[3][0]
         max_prob_techniques = parameters[3][1]
@@ -105,16 +107,16 @@ class rcATT(AppBase):
         print("Tactics :")
         for tpta in to_print_tactics:
             if tpta[0] == 1:
-                print(Fore.YELLOW + '' + tpta[1] + " : " + str(tpta[2]) + "% confidence")
+                print(f'{Fore.YELLOW}{tpta[1]} : {str(tpta[2])}% confidence')
             else:
-                print(Fore.CYAN + '' + tpta[1] + " : " + str(tpta[2]) + "% confidence")
+                print(f'{Fore.CYAN}{tpta[1]} : {str(tpta[2])}% confidence')
         print(Style.RESET_ALL)
         print("Techniques :")
         for tpte in to_print_techniques:
             if tpte[0] == 1:
-                print(Fore.YELLOW + '' + tpte[1] + " : "+str(tpte[2])+"% confidence")
+                print(f'{Fore.YELLOW}{tpte[1]} : {str(tpte[2])}% confidence')
             else:
-                print(Fore.CYAN + '' + tpte[1] + " : "+str(tpte[2])+"% confidence")
+                print(f'{Fore.CYAN}{tpte[1]} : {str(tpte[2])}% confidence')
         print(Style.RESET_ALL)
         #if output_file != '':
         #    save_stix_file(report_to_predict, title, date, ttps, output_file)
@@ -127,13 +129,11 @@ class rcATT(AppBase):
     def predict_file_content(self, file_id):
         file_data = self.get_file(file_id)
 
-        prediction = self.get_prediction(file_data["data"])
-        return prediction
+        return self.get_prediction(file_data["data"])
 
     # Write your data inside this function
     def predict(self, data):
-        prediction = self.get_prediction(data)
-        return prediction
+        return self.get_prediction(data)
 
 if __name__ == "__main__":
     rcATT.run()

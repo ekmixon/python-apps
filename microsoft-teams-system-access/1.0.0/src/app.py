@@ -71,7 +71,7 @@ class Teams(AppBase):
 
     def list_teams(self, tenant_id, client_id, client_secret, user_id):
         session = self.authenticate(tenant_id, client_id, client_secret)
-        graph_url = "%s/v1.0/users/%s/joinedTeams" % (self.graph_url, user_id)
+        graph_url = f"{self.graph_url}/v1.0/users/{user_id}/joinedTeams"
 
         ret = session.get(graph_url)
         print(ret.status_code)
@@ -88,7 +88,7 @@ class Teams(AppBase):
 
     def list_members_in_team(self, tenant_id, client_id, client_secret, team_id):
         session = self.authenticate(tenant_id, client_id, client_secret)
-        graph_url = "%s/v1.0/teams/%s/members" % (self.graph_url, team_id)
+        graph_url = f"{self.graph_url}/v1.0/teams/{team_id}/members"
 
         ret = session.get(graph_url)
         print(ret.status_code)
@@ -105,7 +105,7 @@ class Teams(AppBase):
 
     def list_channels_in_team(self, tenant_id, client_id, client_secret, team_id):
         session = self.authenticate(tenant_id, client_id, client_secret)
-        graph_url = "%s/v1.0/teams/%s/channels" % (self.graph_url, team_id)
+        graph_url = f"{self.graph_url}/v1.0/teams/{team_id}/channels"
 
         ret = session.get(graph_url)
         print(ret.status_code)
@@ -122,7 +122,10 @@ class Teams(AppBase):
 
     def add_user_to_channel(self, tenant_id, client_id, client_secret, team_id, channel_id, user_id, role):
         session = self.authenticate(tenant_id, client_id, client_secret)
-        graph_url = "%s/v1.0/teams/%s/channels/%s/members" % (self.graph_url, team_id, channel_id)
+        graph_url = (
+            f"{self.graph_url}/v1.0/teams/{team_id}/channels/{channel_id}/members"
+        )
+
 
         data = {
             "@odata.type": "#microsoft.graph.aadUserConversationMember",
@@ -144,7 +147,10 @@ class Teams(AppBase):
     # Dosnt work: https://docs.microsoft.com/en-us/graph/api/chat-post-messages?view=graph-rest-beta&tabs=http
     def send_message_to_channel(self, tenant_id, client_id, client_secret, team_id, channel_id, user_id, message):
         session = self.authenticate(tenant_id, client_id, client_secret)
-        graph_url = "%s/v1.0/teams/%s/channels/%s/messages" % (self.graph_url, team_id, channel_id)
+        graph_url = (
+            f"{self.graph_url}/v1.0/teams/{team_id}/channels/{channel_id}/messages"
+        )
+
 
         #"createdDateTime":"2021-02-04T19:58:15.511Z",
         data = {
@@ -174,7 +180,7 @@ class Teams(AppBase):
 
     def create_channel_in_team(self, tenant_id, client_id, client_secret, team_id, name, description):
         session = self.authenticate(tenant_id, client_id, client_secret)
-        graph_url = "%s/v1.0/teams/%s/channels" % (self.graph_url, team_id)
+        graph_url = f"{self.graph_url}/v1.0/teams/{team_id}/channels"
 
         data = {
             "displayName": name,
@@ -195,7 +201,7 @@ class Teams(AppBase):
 
     def delete_channel(self, tenant_id, client_id, client_secret, team_id, channel_id):
         session = self.authenticate(tenant_id, client_id, client_secret)
-        graph_url = "%s/v1.0/teams/%s/channels/%s" % (self.graph_url, team_id, channel_id)
+        graph_url = f"{self.graph_url}/v1.0/teams/{team_id}/channels/{channel_id}"
         ret = session.delete(graph_url)
         try:
             data = ret.json()
@@ -209,7 +215,7 @@ class Teams(AppBase):
 
     def list_apps_in_team(self, tenant_id, client_id, client_secret, team_id):
         session = self.authenticate(tenant_id, client_id, client_secret)
-        graph_url = "%s/v1.0/teams/%s/installedApps" % (self.graph_url, team_id)
+        graph_url = f"{self.graph_url}/v1.0/teams/{team_id}/installedApps"
         ret = session.get(graph_url)
         try:
             data = ret.json()
@@ -223,7 +229,7 @@ class Teams(AppBase):
 
     def get_app_in_team(self, tenant_id, client_id, client_secret, team_id, app_id):
         session = self.authenticate(tenant_id, client_id, client_secret)
-        graph_url = "%s/v1.0/teams/%s/installedApps/%s" % (self.graph_url, team_id, app_id)
+        graph_url = f"{self.graph_url}/v1.0/teams/{team_id}/installedApps/{app_id}"
         ret = session.get(graph_url)
         try:
             data = ret.json()
@@ -244,7 +250,7 @@ class Teams(AppBase):
     def add_webhook_to_team(self, tenant_id, client_id, client_secret, team_id):
         session = self.authenticate(tenant_id, client_id, client_secret)
         #graph_url = "%s/v1.0/teams/%s/installedApps" % (self.graph_url, team_id)
-        graph_url = "%s/v1.0/chats/%s/installedApps" % (self.graph_url, team_id)
+        graph_url = f"{self.graph_url}/v1.0/chats/{team_id}/installedApps"
 	#POST https://graph.microsoft.com/v1.0/chats/19:ea28e88c00e94c7786b065394a61f296@thread.v2/installedApps
 
 

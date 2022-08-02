@@ -51,38 +51,35 @@ class MySQL(AppBase):
                 error = {"Error": f"Couldn't use the database {name}: {err}"}
                 return err
         else:
-            if tables:
-                if not isinstance(tables, list) and not isinstance(tables, dict):
-                    tables = json.loads(tables)
-
-                t_count = 0
-                for table_name in tables:
-                    table_description = tables[table_name]
-                    try:
-                        print(f"Creating table {table_name}: ", end="")
-                        cursor.execute(table_description)
-                        print(f"Table {table_name} created with success!")
-                        t_count += 1
-                    except mysql.connector.Error as err:
-                        if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
-                            print(f"Table {table_name} already exists.")
-                            error = {"Error": f"Table {table_name} already exists."}
-                            return error
-                        else:
-                            print(err.msg)
-                            error = {
-                                "Error": f"Couldn't create table {table_name}: {err.msg}"
-                            }
-                            return error
-
-                response = {
-                    "message": f"Database {name} and tables created with success!",
-                    "tables": tables,
-                }
-
-                return json.dumps(response, indent=4)
-            else:
+            if not tables:
                 return f"Database {name} created with success!"
+            if not isinstance(tables, list) and not isinstance(tables, dict):
+                tables = json.loads(tables)
+
+            t_count = 0
+            for table_name in tables:
+                table_description = tables[table_name]
+                try:
+                    print(f"Creating table {table_name}: ", end="")
+                    cursor.execute(table_description)
+                    print(f"Table {table_name} created with success!")
+                    t_count += 1
+                except mysql.connector.Error as err:
+                    if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
+                        print(f"Table {table_name} already exists.")
+                        return {"Error": f"Table {table_name} already exists."}
+                    else:
+                        print(err.msg)
+                        return {
+                            "Error": f"Couldn't create table {table_name}: {err.msg}"
+                        }
+
+            response = {
+                "message": f"Database {name} and tables created with success!",
+                "tables": tables,
+            }
+
+            return json.dumps(response, indent=4)
 
     # Create Tables
     def create_tables(self, server, user, password, database, tables):
@@ -96,16 +93,13 @@ class MySQL(AppBase):
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                 print("Something is wrong with your user name or password")
-                error = {"Error": "Something is wrong with your user name or password"}
-                return error
+                return {"Error": "Something is wrong with your user name or password"}
             elif err.errno == errorcode.ER_BAD_DB_ERROR:
                 print("Database does not exist")
-                error = {"Error": "Database does not exist"}
-                return error
+                return {"Error": "Database does not exist"}
             else:
                 print(err)
-                error = {"Error": f"{err}"}
-                return error
+                return {"Error": f"{err}"}
         else:
             cursor = conn.cursor()
             t_count = 0
@@ -119,22 +113,18 @@ class MySQL(AppBase):
                 except mysql.connector.Error as err:
                     if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
                         print("already exists.")
-                        error = {"Error": f"Table {table_name} already exists."}
-                        return error
+                        return {"Error": f"Table {table_name} already exists."}
                     else:
                         print(err.msg)
-                        error = {"Error": f"{err.msg}"}
-                        return error
-            result = (
+                        return {"Error": f"{err.msg}"}
+            cursor.close()
+            conn.close()
+
+            return (
                 "Table(s) created with success!"
                 if t_count > 1
                 else "Table created with success!"
             )
-
-            cursor.close()
-            conn.close()
-
-            return result
 
     # Insert data into table
     def insert_data(self, server, user, password, database, table, data):
@@ -148,16 +138,13 @@ class MySQL(AppBase):
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                 print("Something is wrong with your user name or password")
-                error = {"Error": "Something is wrong with your user name or password"}
-                return error
+                return {"Error": "Something is wrong with your user name or password"}
             elif err.errno == errorcode.ER_BAD_DB_ERROR:
                 print("Database does not exist")
-                error = {"Error": "Database does not exist"}
-                return error
+                return {"Error": "Database does not exist"}
             else:
                 print(err)
-                error = {"Error": f"{err}"}
-                return error
+                return {"Error": f"{err}"}
         else:
             cursor = conn.cursor()
             if isinstance(data, list):
@@ -265,9 +252,7 @@ class MySQL(AppBase):
 
         cursor.execute(query)
         row_headers = [x[0] for x in cursor.description]
-        json_data = []
-        for result in cursor.fetchall():
-            json_data.append(dict(zip(row_headers, result)))
+        json_data = [dict(zip(row_headers, result)) for result in cursor.fetchall()]
         result = cursor
         cursor.close()
         conn.close()

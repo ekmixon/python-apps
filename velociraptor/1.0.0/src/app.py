@@ -55,49 +55,42 @@ class Velociraptor(AppBase):
 
     def add_client_label(self, api_config, client_id, label):
         query = "SELECT label(client_id='" + client_id + "', labels=['" + label  +"'], op='set') FROM scope()'"
-        results = self.request(api_config, query)
-        return results
+        return self.request(api_config, query)
 
 
     def get_client_label(self, api_config, client_id, label):
         query = "SELECT label(client_id='" + client_id + "', labels=['" + label  +"'], op='check') FROM scope()'"
-        results = self.request(api_config, query)
-        return results
+        return self.request(api_config, query)
 
     def remove_client_label(self, api_config, client_id, label):
         query = "SELECT label(client_id='" + client_id + "', labels=['" + label  +"'], op='remove') FROM scope()'"
-        results = self.request(api_config, query)
-        return results
+        return self.request(api_config, query)
 
 
     def add_client_quarantine(self, api_config, client_id):
-        query = 'SELECT collect_client(client_id="' + client_id + '", artifacts=["Windows.Remediation.Quarantine"], spec=dict(`Windows.Remediation.Quarantine`=dict())) FROM scope()' 
-        results = self.request(api_config, query)
-        return results
+        query = 'SELECT collect_client(client_id="' + client_id + '", artifacts=["Windows.Remediation.Quarantine"], spec=dict(`Windows.Remediation.Quarantine`=dict())) FROM scope()'
+        return self.request(api_config, query)
 
     def remove_client_quarantine(self, api_config, client_id):
         query = 'SELECT collect_client(client_id="' + client_id + '", artifacts=["Windows.Remediation.Quarantine"], spec=dict(`Windows.Remediation.Quarantine`=dict(`RemovePolicy`="Y"))) FROM scope()'
-        results = self.request(api_config, query)
-        return results
+        return self.request(api_config, query)
 
     def get_artifact_definitions(self, api_config):
         query = 'SELECT name, description, parameters FROM artifact_definitions(deps=True)'
-        results = self.request(api_config, query)
-        return results
+        return self.request(api_config, query)
 
     def get_client_id(self, api_config, host):
         try:
             if ipaddress.ip_address(host):
-                query = "SELECT client_id FROM clients() WHERE last_ip =~ '" + host + "'"  
+                query = "SELECT client_id FROM clients() WHERE last_ip =~ '" + host + "'"
         except:
-            query = "SELECT client_id FROM clients(search=" + host + ")"
+            query = f"SELECT client_id FROM clients(search={host})"
         results = self.request(api_config, query)
         return results [0]['client_id']
 
     def get_client_flows(self, api_config, client_id):
         query = "SELECT * FROM flows(client_id='" + client_id  + "')"
-        results = self.request(api_config, query)
-        return results
+        return self.request(api_config, query)
 
     def get_client_flow_results(self, api_config, client_id, flow_id):
         state = self.get_client_flow_status(api_config, client_id, flow_id)

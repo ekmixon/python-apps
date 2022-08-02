@@ -27,12 +27,12 @@ class Vader(AppBase):
 
         analyzer = SentimentIntensityAnalyzer()
         vs = analyzer.polarity_scores(text)
-        print(str(vs))
+        print(vs)
 
         """
         Returns log of what was archived
         """
-        message = f"Text {text} analyzed by VADER with a score of " + str(vs)
+        message = f"Text {text} analyzed by VADER with a score of {str(vs)}"
 
         # This logs to the docker logs
         self.logger.info(message)

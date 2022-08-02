@@ -32,20 +32,15 @@ class Compliance(AppBase):
 
             if not record and not line.startswith("{") and not line.startswith("["):
                 skipped += 1
-        
+
             if record:
                 newlines.append(line)
-        
+
             #if "SHFFL_START" in line:
             #    record = True
 
         self.logger.info(f"SKIPPED {skipped} lines")
-        if len(newlines) == 0:
-            return item
-
-        item = "\n".join(newlines)
-
-        return item
+        return "\n".join(newlines) if newlines else item
 
     def replace_and_run(self, password, app_id, organization, command):
         data = ""
@@ -63,7 +58,7 @@ class Compliance(AppBase):
         with open(self.filename, "w+") as tmp:
             tmp.write(data)
 
-        command = f"pwsh -file {self.filename}" 
+        command = f"pwsh -file {self.filename}"
         self.logger.info(f"PRE POPEN: {command}")
         process = subprocess.Popen(
             command,
@@ -78,11 +73,11 @@ class Compliance(AppBase):
         item = ""
         if len(stdout[0]) > 0:
             item = stdout[0]
-            self.logger.info("Succesfully ran bash. Stdout: %s" % item)
+            self.logger.info(f"Succesfully ran bash. Stdout: {item}")
         else:
             item = stdout[1]
-            self.logger.info("FAILED to run bash. Stdout: %s!" % item)
-            #return item
+            self.logger.info(f"FAILED to run bash. Stdout: {item}!")
+                #return item
 
         try:
             new_cleanup = self.cleanup(item)
@@ -104,35 +99,30 @@ class Compliance(AppBase):
             return filedata
 
         cert = "cert.pfx"
-        self.logger.info("Writing cert to file %s" % cert)
+        self.logger.info(f"Writing cert to file {cert}")
         with open(cert, "wb+") as tmp:
             tmp.write(filedata["data"])
 
         return filedata
 
     def run_custom(self, certificate, password, app_id, organization, command):
-        self.logger.info("Getting: %s %s %s %s" % (certificate, password, app_id, organization))
+        self.logger.info(f"Getting: {certificate} {password} {app_id} {organization}")
         filedata = self.handle_filewriting(certificate)
         if filedata["success"] == False:
             return filedata
 
         parsed_command = command
-        #if "convertto-json" not in parsed_command.lower():
-        #    parsed_command = parsed_command + "| ConvertTo-Json -Depth 9"
-
-        ret = self.replace_and_run(password, app_id, organization, parsed_command)
-        return ret 
+        return self.replace_and_run(password, app_id, organization, parsed_command) 
 
     def get_mailbox(self, certificate, password, app_id, organization):
-        self.logger.info("Getting: %s %s %s %s" % (certificate, password, app_id, organization))
+        self.logger.info(f"Getting: {certificate} {password} {app_id} {organization}")
         filedata = self.handle_filewriting(certificate)
         if filedata["success"] == False:
             return filedata
 
-        parsed_command = f"Get-Mailbox | ConvertTo-Json -Depth 9"
+        parsed_command = "Get-Mailbox | ConvertTo-Json -Depth 9"
 
-        ret = self.replace_and_run(password, app_id, organization, parsed_command)
-        return ret 
+        return self.replace_and_run(password, app_id, organization, parsed_command) 
 
 
 if __name__ == "__main__":

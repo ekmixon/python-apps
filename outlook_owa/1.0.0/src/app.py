@@ -93,9 +93,9 @@ class Owa(AppBase):
             except ValueError:
                 return {
                     "account": None,
-                    "error": "Build needs to be a sequence of numbers dot separated, not %s"
-                    % build,
+                    "error": f"Build needs to be a sequence of numbers dot separated, not {build}",
                 }
+
 
         try:
             credentials = Credentials(username, password)
@@ -135,19 +135,18 @@ class Owa(AppBase):
             return {
                 "success": False,
                 "folder": None,
-                "error": "Root folder {} not supported. Valid values are: inbox, outbox, sent, trash, draft".format(
-                    folderroot
-                ),
+                "error": f"Root folder {folderroot} not supported. Valid values are: inbox, outbox, sent, trash, draft",
             }
 
-        if folderroot == "outbox":
+
+        if folderroot == "draft":
+            folder = account.draft
+        elif folderroot == "outbox":
             folder = account.outbox
         elif folderroot == "sent":
             folder = account.sent
         elif folderroot == "trash":
             folder = account.trash
-        elif folderroot == "draft":
-            folder = account.draft
         else:
             folder = account.inbox
 
@@ -196,8 +195,7 @@ class Owa(AppBase):
             ],
         )
 
-        file_uids = str(attachments).split()
-        if len(file_uids) > 0:
+        if file_uids := str(attachments).split():
             for file_uid in file_uids:
                 attachment_data = self.get_file(file_uid)
                 file = FileAttachment(
@@ -247,8 +245,8 @@ class Owa(AppBase):
             account.root.refresh()
             return {"success": True}
         except exchangelib.errors.DoesNotExist as e:
-            print("ERROR: %s" % e)
-            return {"success": False, "reason": "Email {} does not exists".format(email_id)}
+            print(f"ERROR: {e}")
+            return {"success": False, "reason": f"Email {email_id} does not exists"}
 
     def add_category(
         self, username, password, server, build, account, verifyssl, email_id, category, foldername="inbox"
@@ -285,8 +283,8 @@ class Owa(AppBase):
             account.root.refresh()
             return {"success": True}
         except exchangelib.errors.DoesNotExist as e:
-            print("ERROR: %s" % e)
-            return {"success": False, "reason": "Email {} does not exists".format(email_id)}
+            print(f"ERROR: {e}")
+            return {"success": False, "reason": f"Email {email_id} does not exists"}
 
     def delete_email(
         self, username, password, server, build, account, verifyssl, email_id
@@ -306,7 +304,7 @@ class Owa(AppBase):
             account.root.refresh()
             return {"success": True}
         except exchangelib.errors.DoesNotExist:
-            return {"success": False, "reason": "Email {} does not exists".format(email_id)}
+            return {"success": False, "reason": f"Email {email_id} does not exists"}
 
     def move_email(
         self,
@@ -346,7 +344,7 @@ class Owa(AppBase):
             account.root.refresh()
             return {"success": True}
         except exchangelib.errors.DoesNotExist:
-            return {"success": False, "reason": "Email {} does not exists".format(email_id)}
+            return {"success": False, "reason": f"Email {email_id} does not exists"}
 
     def get_emails(
         self,
@@ -408,25 +406,25 @@ class Owa(AppBase):
             try:
                 amount = int(amount)
             except ValueError:
-                return json.dumps({
-                    "success": False,
-                    "account": None,
-                    "error": "Amount needs to be a number, not %s" % amount,
-                })
+                return json.dumps(
+                    {
+                        "success": False,
+                        "account": None,
+                        "error": f"Amount needs to be a number, not {amount}",
+                    }
+                )
+
 
         # Get input from gui
-        unread = True if unread.lower().strip() == "true" else False
+        unread = unread.lower().strip() == "true"
         category = category.lower().strip()
-        include_raw_body = True if include_raw_body.lower().strip() == "true" else False
-        include_attachment_data = (
-            True if include_attachment_data.lower().strip() == "true" else False
-        )
-        upload_email_shuffle = (
-            True if upload_email_shuffle.lower().strip() == "true" else False
-        )
+        include_raw_body = include_raw_body.lower().strip() == "true"
+        include_attachment_data = include_attachment_data.lower().strip() == "true"
+        upload_email_shuffle = upload_email_shuffle.lower().strip() == "true"
         upload_attachments_shuffle = (
-            True if upload_attachments_shuffle.lower().strip() == "true" else False
+            upload_attachments_shuffle.lower().strip() == "true"
         )
+
 
         # Convert <amount> of mails in json
         emails = []
@@ -466,7 +464,7 @@ class Owa(AppBase):
                 # Add message_id as top returned field
                 output_dict["message_id"] = parsed_eml["header"]["header"]["message-id"][0]
                 output_dict["message_id"] = output_dict["message_id"].replace("\t", "").strip()
-                
+
                 # Add categories to output dict
                 output_dict["categories"] = email.categories
 
@@ -500,24 +498,24 @@ class Owa(AppBase):
                     if len(output_dict["body"]) > 1:
                         output_dict["body"][0]["raw_body"] = output_dict["body"][1]["content"]
                 except KeyError as e:
-                    print("OK KeyError (1): %s" % e)
+                    print(f"OK KeyError (1): {e}")
                 except IndexError as e:
-                    print("OK IndexError (1): %s" % e)
+                    print(f"OK IndexError (1): {e}")
 
                 try:
                     if len(output_dict["body"]) > 0:
                         output_dict["body"] = output_dict["body"][0]
                 except KeyError as e:
-                    print("OK KeyError (2): %s" % e)
+                    print(f"OK KeyError (2): {e}")
                 except IndexError as e:
-                    print("OK IndexError (2): %s" % e)
+                    print(f"OK IndexError (2): {e}")
 
                 try:
                     del output_dict["attachment"]
                 except KeyError as e:
-                    print("Ok Error (3): %s" % e)
+                    print(f"Ok Error (3): {e}")
                 except IndexError as e:
-                    print("OK IndexError (3): %s" % e)
+                    print(f"OK IndexError (3): {e}")
 
                 print("Appending email")
                 emails.append(output_dict)
@@ -549,7 +547,7 @@ def run(request):
         Owa.run(action)
         return f'Attempting to execute function {action["name"]} in app {action["app_name"]}'
     else:
-        return f"Invalid action"
+        return "Invalid action"
 
 
 if __name__ == "__main__":

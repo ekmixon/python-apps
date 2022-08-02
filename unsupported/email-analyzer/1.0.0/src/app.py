@@ -14,8 +14,7 @@ from walkoff_app_sdk.app_base import AppBase
 
 def json_serial(obj):
     if isinstance(obj, datetime.datetime):
-        serial = obj.isoformat()
-        return serial
+        return obj.isoformat()
 
 class EmailAnalyzer(AppBase):
     __version__ = "1.0.0"
@@ -52,8 +51,7 @@ class EmailAnalyzer(AppBase):
                 msg = MsOxMessage(file_path['data'])
                 msg_properties_dict = msg.get_properties()
                 print(msg_properties_dict)
-                frozen = jsonpickle.encode(msg_properties_dict)
-                return frozen
+                return jsonpickle.encode(msg_properties_dict)
             except Exception as e:
                 return {"Success":"False","Message":f"Exception occured: {e}"}    
 

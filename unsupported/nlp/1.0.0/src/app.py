@@ -24,33 +24,30 @@ class NLP(AppBase):
         doc = self.nlp(data)
         resp = []
         if doc._.has_ipv4 == True:
-            for i in doc._.ipv4:
-                resp.append(i[1])
+            resp.extend(i[1] for i in doc._.ipv4)
         return resp
 
     def get_urls(self, data):
         doc = self.nlp(data)
         resp = []
         if doc._.has_url == True:
-            for i in doc._.url:
-                resp.append(i[1])
+            resp.extend(i[1] for i in doc._.url)
         return resp
 
     def get_emails(self, data):
         doc = self.nlp(data)
         resp = []
         if doc._.has_email_addr == True:
-            for i in doc._.email_addr:
-                resp.append(i[1])
+            resp.extend(i[1] for i in doc._.email_addr)
         return resp
 
     def get_entities(self, data):
         doc = self.nlp(data)
-        resp = []
-        for ent in doc.ents:
-            if (ent.label_ == 'PERSON') or (ent.label_ == 'ORG'):
-                resp.append({'ent':ent.text, 'label':ent.label_})
-        return resp
+        return [
+            {'ent': ent.text, 'label': ent.label_}
+            for ent in doc.ents
+            if ent.label_ in ['PERSON', 'ORG']
+        ]
 
     def get_content(self, data):
         import tika

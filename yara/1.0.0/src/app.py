@@ -26,11 +26,12 @@ class Yara(AppBase):
     #https://yara.readthedocs.io/en/latest/yarapython.html
     def download_rules(self, namespace):
         zipfiles = self.get_file_namespace(namespace)
-        if zipfiles == None:
+        if zipfiles is None:
             return {
                 "success": False,
-                "reason": "Failed loading files from namespace %s" % namespace,
+                "reason": f"Failed loading files from namespace {namespace}",
             }
+
 
         all_files = ""
         for name in zipfiles.namelist():
@@ -43,11 +44,7 @@ class Yara(AppBase):
     # Write your data inside this function
     #https://yara.readthedocs.io/en/latest/yarapython.html
     def analyze_by_rule(self, file_id, rule, timeout=15):
-        if timeout == 0 or not timeout:
-            timeout = 15
-        else:
-            timeout = int(timeout)
-
+        timeout = 15 if timeout == 0 or not timeout else int(timeout)
         file_ret = self.get_file(file_id)
         #print("Getting file: %s" % file_id)
         #print("FINISHED GETTING FILE: %s" % file_ret)
@@ -97,28 +94,21 @@ class Yara(AppBase):
         all_files = []
         data = os.listdir(get_dir)
         for filename in data:
-            parsedpath = "%s/%s" % (get_dir, filename)
+            parsedpath = f"{get_dir}/{filename}"
             if not filename.startswith(".") and os.path.isdir(parsedpath):  
                 #print("FOLDER: %s" % parsedpath)
                 folderpaths = self.find_files(parsedpath)
                 all_files.extend(folderpaths)
-                #print("FOLDERPATHS: %s" % folderpaths)
-                pass
-            else:
-                if filename.endswith(".yar"):
-                    all_files.append(parsedpath)
-        
+            elif filename.endswith(".yar"):
+                all_files.append(parsedpath)
+
         return all_files
 
 
     # Write your data inside this function
     #https://yara.readthedocs.io/en/latest/yarapython.html
     def analyze_file(self, file_id, timeout=15):
-        if timeout == 0 or not timeout:
-            timeout = 15
-        else:
-            timeout = int(timeout)
-        
+        timeout = 15 if timeout == 0 or not timeout else int(timeout)
         print(f"Getting file {file_id} to be analyzed")
         file_ret = self.get_file(file_id)
         #print("FINISHED GETTING FILE: %s" % file_ret)
@@ -170,7 +160,7 @@ class Yara(AppBase):
         #print(all_matches)
 
         if len(all_matches) >= 10:
-            all_matches = all_matches[0:9]
+            all_matches = all_matches[:9]
 
         return_data = {
             "success": True,

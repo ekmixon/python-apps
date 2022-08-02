@@ -253,7 +253,7 @@ class AzureSentinel(AppBase):
 
         print("Here 0")
         comment_url = f"{self.azure_url}/subscriptions/{kwargs['subscription_id']}/resourceGroups/{kwargs['resource_group_name']}/providers/Microsoft.OperationalInsights/workspaces/{kwargs['workspace_name']}/savedSearches"
-        
+
 
         #providers/Microsoft.SecurityInsights/incidents/{kwargs['incident_id']}/comments"
         #PUT https://management.azure.com/subscriptions/{subscriptionId} _

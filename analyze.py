@@ -13,12 +13,12 @@ for basename in dirs:
 
     print(f"\n[DEBUG] Analyzing: {basename}")
     try:
-        versions = os.listdir("./%s" % basename)
+        versions = os.listdir(f"./{basename}")
     except NotADirectoryError:
         continue
 
     for version in versions:
-        filepath = "%s/%s/api.yaml" % (basename, version)
+        filepath = f"{basename}/{version}/api.yaml"
 
         try:
             with open(filepath, "r") as tmp:
@@ -30,12 +30,12 @@ for basename in dirs:
 
                 newname = ret["name"].lower().replace(" ", "-", -1).replace(".", "-", -1)
                 if newname != basename:
-                    print("Bad name: %s vs %s" % (basename, newname))
+                    print(f"Bad name: {basename} vs {newname}")
 
                 if ret["app_version"] != version:
-                    print("Bad version (%s): %s vs %s" % (basename, version, ret["app_version"]))
-                #else:
-                #    print("%s:%s is valid" % (basename, version))
+                    print(f'Bad version ({basename}): {version} vs {ret["app_version"]}')
+                            #else:
+                            #    print("%s:%s is valid" % (basename, version))
         except (NotADirectoryError, FileNotFoundError) as e:
             #print("Error inner file: %s" % e)
             pass
@@ -58,15 +58,14 @@ for basename in dirs:
                     print(f"Bad yaml in {apifile} (2): {e}")
                     continue
 
-                for item in apidata["actions"]:
-                    action_names.append(item["name"])
+                action_names.extend(item["name"] for item in apidata["actions"])
         except NotADirectoryError as e:
             continue
 
         with open(pythonfile, "r") as tmp:
             pythondata = tmp.read()
             for action_name in action_names:
-                if not action_name in pythondata:
+                if action_name not in pythondata:
                     print(f"===> Couldn't find action \"{action_name}\" from {apifile} in script {pythonfile}") 
 
             code = f"python3 {pythonfile}"

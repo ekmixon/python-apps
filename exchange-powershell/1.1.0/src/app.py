@@ -38,20 +38,15 @@ class exchange_powershell(AppBase):
 
             if not record and not line.startswith("{") and not line.startswith("["):
                 skipped += 1
-        
+
             if record:
                 newlines.append(line)
-        
+
             #if "SHFFL_START" in line:
             #    record = True
 
         self.logger.info(f"SKIPPED {skipped} lines")
-        if len(newlines) == 0:
-            return item
-
-        item = "\n".join(newlines)
-
-        return item
+        return "\n".join(newlines) if newlines else item
 
     def replace_and_run(self, password, app_id, organization, command):
         data = ""
@@ -69,7 +64,7 @@ class exchange_powershell(AppBase):
         with open(self.filename, "w+") as tmp:
             tmp.write(data)
 
-        command = f"pwsh -file {self.filename}" 
+        command = f"pwsh -file {self.filename}"
         self.logger.info(f"PRE POPEN: {command}")
         process = subprocess.Popen(
             command,
@@ -84,11 +79,11 @@ class exchange_powershell(AppBase):
         item = ""
         if len(stdout[0]) > 0:
             item = stdout[0]
-            self.logger.info("Succesfully ran bash. Stdout: %s" % item)
+            self.logger.info(f"Succesfully ran bash. Stdout: {item}")
         else:
             item = stdout[1]
-            self.logger.info("FAILED to run bash. Stdout: %s!" % item)
-            #return item
+            self.logger.info(f"FAILED to run bash. Stdout: {item}!")
+                #return item
 
         try:
             new_cleanup = self.cleanup(item)
@@ -112,52 +107,46 @@ class exchange_powershell(AppBase):
             return filedata
 
         cert = "cert.pfx"
-        self.logger.info("Writing cert to file %s" % cert)
+        self.logger.info(f"Writing cert to file {cert}")
         with open(cert, "wb+") as tmp:
             tmp.write(filedata["data"])
 
         return filedata
 
     def run_custom(self, certificate, password, app_id, organization, command):
-        self.logger.info("Getting: %s %s %s %s" % (certificate, password, app_id, organization))
+        self.logger.info(f"Getting: {certificate} {password} {app_id} {organization}")
         filedata = self.handle_filewriting(certificate)
         if filedata["success"] == False:
             return filedata
 
         parsed_command = command
-        #if "convertto-json" not in parsed_command.lower():
-        #    parsed_command = parsed_command + "| ConvertTo-Json -Depth 9"
-
-        ret = self.replace_and_run(password, app_id, organization, parsed_command)
-        return ret 
+        return self.replace_and_run(password, app_id, organization, parsed_command) 
 
     # Write your data inside this function
     def release_quarantine_message(self, certificate, password, app_id, organization, message_id):
-        self.logger.info("Getting: %s %s %s %s" % (certificate, password, app_id, organization))
+        self.logger.info(f"Getting: {certificate} {password} {app_id} {organization}")
         filedata = self.handle_filewriting(certificate)
         if filedata["success"] == False:
             return filedata
 
         parsed_command = f"Release-QuarantineMessage -Identity {message_id} | ConvertTo-Json"
 
-        ret = self.replace_and_run(password, app_id, organization, parsed_command)
-        return ret 
+        return self.replace_and_run(password, app_id, organization, parsed_command) 
 
     # Write your data inside this function
     def preview_quarantine_message(self, certificate, password, app_id, organization, message_id):
-        self.logger.info("Getting: %s %s %s %s" % (certificate, password, app_id, organization))
+        self.logger.info(f"Getting: {certificate} {password} {app_id} {organization}")
         filedata = self.handle_filewriting(certificate)
         if filedata["success"] == False:
             return filedata
 
         parsed_command = f"Preview-QuarantineMessage -Identity {message_id} | ConvertTo-Json"
 
-        ret = self.replace_and_run(password, app_id, organization, parsed_command)
-        return ret 
+        return self.replace_and_run(password, app_id, organization, parsed_command) 
 
     # Write your data inside this function
     def export_quarantine_message(self, certificate, password, app_id, organization, message_id, skip_upload="false"):
-        self.logger.info("Getting: %s %s %s %s" % (certificate, password, app_id, organization))
+        self.logger.info(f"Getting: {certificate} {password} {app_id} {organization}")
         filedata = self.handle_filewriting(certificate)
         if filedata["success"] == False:
             return filedata
@@ -165,7 +154,7 @@ class exchange_powershell(AppBase):
         parsed_command = f"Export-QuarantineMessage -Identity {message_id} | ConvertTo-Json"
 
         ret = self.replace_and_run(password, app_id, organization, parsed_command)
-        print("RET: %s" % ret)
+        print(f"RET: {ret}")
         try:
             ret = json.loads(ret)
         except json.decoder.JSONDecodeError:
@@ -176,7 +165,7 @@ class exchange_powershell(AppBase):
             return file_eml
 
         message_bytes = base64.b64decode(file_eml)
-        
+
         fileinfo = self.set_files({
             "filename": f"{message_id}.eml", 
             "data": message_bytes 
@@ -191,54 +180,50 @@ class exchange_powershell(AppBase):
 
     # Write your data inside this function
     def delete_quarantine_message(self,  certificate, password, app_id, organization, message_id):
-        self.logger.info("Getting: %s %s %s %s" % (certificate, password, app_id, organization))
+        self.logger.info(f"Getting: {certificate} {password} {app_id} {organization}")
         filedata = self.handle_filewriting(certificate)
         if filedata["success"] == False:
             return filedata
 
         parsed_command = f"Delete-QuarantineMessage -Identity {message_id} | ConvertTo-Json"
 
-        ret = self.replace_and_run(password, app_id, organization, parsed_command)
-        return ret 
+        return self.replace_and_run(password, app_id, organization, parsed_command) 
 
     # Write your data inside this function
     def get_quarantine_message(self,  certificate, password, app_id, organization, message_id):
-        self.logger.info("Getting: %s %s %s %s" % (certificate, password, app_id, organization))
+        self.logger.info(f"Getting: {certificate} {password} {app_id} {organization}")
         filedata = self.handle_filewriting(certificate)
         if filedata["success"] == False:
             return filedata
 
         parsed_command = f"Get-QuarantineMessage {message_id} | ConvertTo-Json"
 
-        ret = self.replace_and_run(password, app_id, organization, parsed_command)
-        return ret 
+        return self.replace_and_run(password, app_id, organization, parsed_command) 
 
     # Write your data inside this function
     def get_quarantine_messages(self, certificate, password, app_id, organization, time_from, time_to):
-        self.logger.info("Getting: %s %s %s %s" % (certificate, password, app_id, organization))
+        self.logger.info(f"Getting: {certificate} {password} {app_id} {organization}")
         filedata = self.handle_filewriting(certificate)
         if filedata["success"] == False:
             return filedata
 
         #parsed_command = f"Get-QuarantineMessage -StartReceivedDate {time_from} -EndReceivedDate {time_to} | ConvertTo-Json"
         #parsed_command = f"Get-QuarantineMessage -StartReceivedDate {time_from} -EndReceivedDate {time_to}"
-        parsed_command = f"Get-QuarantineMessage -PageSize 50 -Page 1"
+        parsed_command = "Get-QuarantineMessage -PageSize 50 -Page 1"
 
 
-        ret = self.replace_and_run(password, app_id, organization, parsed_command)
-        return ret 
+        return self.replace_and_run(password, app_id, organization, parsed_command) 
 
     # Write your data inside this function
     def get_quarantine_messageheaders(self, certificate, password, app_id, organization, message_id):
-        self.logger.info("Getting: %s %s %s %s" % (certificate, password, app_id, organization))
+        self.logger.info(f"Getting: {certificate} {password} {app_id} {organization}")
         filedata = self.handle_filewriting(certificate)
         if filedata["success"] == False:
             return filedata
 
         parsed_command = f"Get-QuarantineMessageHeader {message_id} | ConvertTo-Json"
 
-        ret = self.replace_and_run(password, app_id, organization, parsed_command)
-        return ret 
+        return self.replace_and_run(password, app_id, organization, parsed_command) 
 
 if __name__ == "__main__":
     exchange_powershell.run()

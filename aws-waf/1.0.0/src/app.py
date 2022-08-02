@@ -41,7 +41,7 @@ class AWSEC2(AppBase):
         client = self.auth(access_key, secret_key, region)
         scope = "REGIONAL"
         if "/" not in ip:
-            ip = "%s/32" % ip
+            ip = f"{ip}/32"
 
         # 1. Handle IP setting
         arn = ""
@@ -66,19 +66,22 @@ class AWSEC2(AppBase):
             #print("INFO: %s" % info)
             if info == "<class 'botocore.errorfactory.WAFUnavailableEntityException'>":
                 #print("IT EQUALS!")
-                return "Failed to create ip set: %s" % info
+                return f"Failed to create ip set: {info}"
 
-            print("IP rule set %s already exists" % ipset_name)
+            print(f"IP rule set {ipset_name} already exists")
             response = client.list_ip_sets(
                 Scope='REGIONAL',
                 Limit=100
             )
 
-            selected = {}
-            for item in response["IPSets"]:
-                if item["Name"] == ipset_name:
-                    selected = item
-                    break
+            selected = next(
+                (
+                    item
+                    for item in response["IPSets"]
+                    if item["Name"] == ipset_name
+                ),
+                {},
+            )
 
             try:
                 item_id = selected["Id"]
@@ -92,13 +95,7 @@ class AWSEC2(AppBase):
             )
 
             arn = new_resp["IPSet"]["ARN"]
-            found = False 
-            for address in  new_resp["IPSet"]["Addresses"]:
-                if address == ip:
-                    found = True
-                    break
-                    #return "%s is already in this WAF rule" % ip
-
+            found = any(address == ip for address in new_resp["IPSet"]["Addresses"])
             if not found:
                 new_resp["IPSet"]["Addresses"].append(ip)
                 update_resp = client.update_ip_set(
@@ -146,25 +143,26 @@ class AWSEC2(AppBase):
                 },
             )
 
-            print("Rule group creation: %s" % outerresponse)
+            print(f"Rule group creation: {outerresponse}")
         except:
-            print("Rule group %s already exists" % ipset_name)
+            print(f"Rule group {ipset_name} already exists")
             # Get the rule
             get_groups = client.list_rule_groups(
                 Scope=scope,
                 Limit=100,
             )
 
-            cur_rule = {}
-            for rule in get_groups["RuleGroups"]:
-                #print("Rule: %s" % rule)
-                if rule["Name"] == ipset_name:
-                    cur_rule = rule 
-                    break
+            cur_rule = next(
+                (
+                    rule
+                    for rule in get_groups["RuleGroups"]
+                    if rule["Name"] == ipset_name
+                ),
+                {},
+            )
 
             try:
-                if cur_rule["Name"] == ipset_name:
-                    pass
+                pass
             except KeyError:
                 return "Couldn't find rule group %s" % ipset_name
 
@@ -179,9 +177,9 @@ class AWSEC2(AppBase):
                 try:
                     if rule["Name"] == ipset_name:
                         # ["Statement"]["IPSetReferenceStatement"]["ARN"] == arn:
-                        return "Successfully blocked %s in WAF (2)" % ip
+                        return f"Successfully blocked {ip} in WAF (2)"
                 except KeyError as e:
-                    print("Keyerror: %s" % e)
+                    print(f"Keyerror: {e}")
 
             rules = get_group["RuleGroup"]["Rules"]
             rules.append(updateRule)
@@ -200,7 +198,7 @@ class AWSEC2(AppBase):
                 },
             )
 
-        return "Successfully blocked %s in WAF (4)" % ip
+        return f"Successfully blocked {ip} in WAF (4)"
 
 
 if __name__ == "__main__":

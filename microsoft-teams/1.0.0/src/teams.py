@@ -45,8 +45,7 @@ class cardsection:
     def addImage(self, simage, ititle=None):
         if "images" not in self.payload.keys():
             self.payload["images"] = []
-        imobj = {}
-        imobj["image"] = simage
+        imobj = {"image": simage}
         if ititle:
             imobj["title"] = ititle
         self.payload["images"].append(imobj)
@@ -175,10 +174,7 @@ class connectorcard:
         self.payload["summary"] = msummary
 
     def color(self, mcolor):
-        if mcolor.lower() == "red":
-            self.payload["themeColor"] = "E81123"
-        else:
-            self.payload["themeColor"] = mcolor
+        self.payload["themeColor"] = "E81123" if mcolor.lower() == "red" else mcolor
 
     def addLinkButton(self, buttontext, buttonurl):
         if "potentialAction" not in self.payload:
@@ -211,8 +207,8 @@ class connectorcard:
         self.payload["potentialAction"].append(newaction.dumpPotentialAction())
 
     def printme(self):
-        print("hookurl: %s" % self.hookurl)
-        print("payload: %s" % self.payload)
+        print(f"hookurl: {self.hookurl}")
+        print(f"payload: {self.payload}")
 
     def send(self):
         headers = {"Content-Type":"application/json"}
@@ -250,5 +246,4 @@ class connectorcard:
 
 
 def formaturl(display, url):
-    mdurl = "[%s](%s)" % (display, url)
-    return mdurl
+    return f"[{display}]({url})"

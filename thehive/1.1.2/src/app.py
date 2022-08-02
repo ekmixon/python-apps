@@ -75,11 +75,7 @@ class TheHive(AppBase):
         else:
             response = self.thehive.find_cases(query=custom_query, range="all", sort=[])
 
-        if (
-            response.status_code == 200
-            or response.status_code == 201
-            or response.status_code == 202
-        ):
+        if response.status_code in [200, 201, 202]:
             return response.text
         else:
             raise IOError(response.text)
@@ -157,11 +153,11 @@ class TheHive(AppBase):
 
         if isinstance(tlp, str):
             if not tlp.isdigit():
-                return "TLP needs to be a number from 0-2, not %s" % tlp
+                return f"TLP needs to be a number from 0-2, not {tlp}"
             tlp = int(tlp)
         if isinstance(severity, str):
             if not severity.isdigit():
-                return "Severity needs to be a number from 0-2, not %s" % tlp
+                return f"Severity needs to be a number from 0-2, not {tlp}"
 
             severity = int(severity)
 
@@ -170,7 +166,7 @@ class TheHive(AppBase):
         if severity > 2 or severity < 0:
             return "Severity needs to be a number from 0-2, not %d" % tlp
 
-        Casetemplate = template if template else None
+        Casetemplate = template or None
 
         case = thehive4py.models.Case(
             title=title,
@@ -185,7 +181,7 @@ class TheHive(AppBase):
             ret = self.thehive.create_case(case)
             return ret.text
         except requests.exceptions.ConnectionError as e:
-            return "ConnectionError: %s" % e
+            return f"ConnectionError: {e}"
 
     def create_alert(
         self,
@@ -221,12 +217,12 @@ class TheHive(AppBase):
 
         if isinstance(tlp, str):
             if not tlp.isdigit():
-                return "TLP needs to be a number from 0-3, not %s" % tlp
+                return f"TLP needs to be a number from 0-3, not {tlp}"
 
             tlp = int(tlp)
         if isinstance(severity, str):
             if not severity.isdigit():
-                return "Severity needs to be a number from 1-3, not %s" % severity
+                return f"Severity needs to be a number from 1-3, not {severity}"
 
             severity = int(severity)
 
@@ -250,7 +246,7 @@ class TheHive(AppBase):
             if isinstance(artifacts, list):
                 print("ITS A LIST!")
                 for item in artifacts:
-                    print("ITEM: %s" % item)
+                    print(f"ITEM: {item}")
                     try:
                         artifact = thehive4py.models.AlertArtifact(
                             dataType=item["data_type"],
@@ -271,7 +267,7 @@ class TheHive(AppBase):
 
                         all_artifacts.append(artifact)
                     except KeyError as e:
-                        print("Error in artifacts: %s" % e)
+                        print(f"Error in artifacts: {e}")
 
         alert = thehive4py.models.Alert(
             title=title,
@@ -289,7 +285,7 @@ class TheHive(AppBase):
             ret = self.thehive.create_alert(alert)
             return ret.text
         except requests.exceptions.ConnectionError as e:
-            return "ConnectionError: %s" % e
+            return f"ConnectionError: {e}"
 
     def create_alert_artifact(
         self,
@@ -308,20 +304,12 @@ class TheHive(AppBase):
     ):
         self.__connect_thehive(url, apikey, organisation, version=4)
 
-        if tlp:
-            tlp = int(tlp)
-        else:
-            tlp = 2
-
+        tlp = int(tlp) if tlp else 2
         ioc = ioc.lower().strip() == "true"
         sighted = sighted.lower().strip() == "true"
         ignoreSimilarity = ignoreSimilarity.lower().strip() == "true"
 
-        if tags:
-            tags = [x.strip() for x in tags.split(",")]
-        else:
-            tags = []
-
+        tags = [x.strip() for x in tags.split(",")] if tags else []
         alert_artifact = thehive4py.models.AlertArtifact(
             dataType=dataType,
             data=data,
@@ -336,7 +324,7 @@ class TheHive(AppBase):
         try:
             ret = self.thehive.create_alert_artifact(alert_id, alert_artifact)
         except requests.exceptions.ConnectionError as e:
-            return "ConnectionError: %s" % e
+            return f"ConnectionError: {e}"
         if ret.status_code > 299:
             raise ConnectionError(ret.text)
 
@@ -349,7 +337,7 @@ class TheHive(AppBase):
         newstr = ""
         ret = ""
         if field_type.lower() == "alert":
-            ret = self.thehive.get_alert(cur_id + "?similarity=1")
+            ret = self.thehive.get_alert(f"{cur_id}?similarity=1")
         elif field_type.lower() == "case":
             ret = self.thehive.get_case(cur_id)
         elif field_type.lower() == "case_observables":
@@ -367,10 +355,8 @@ class TheHive(AppBase):
         elif field_type.lower() == "task_logs":
             ret = self.thehive.get_task_logs(cur_id)
         else:
-            return (
-                "%s is not implemented. See https://github.com/frikky/shuffle-apps for more info."
-                % field_type
-            )
+            return f"{field_type} is not implemented. See https://github.com/frikky/shuffle-apps for more info."
+
 
         return ret.text
 
@@ -393,7 +379,7 @@ class TheHive(AppBase):
 
     def merge_alert_into_case(self, apikey, url, organisation, alert_id, case_id):
         self.__connect_thehive(url, apikey, organisation)
-        req = url + f"/api/alert/{alert_id}/merge/{case_id}"
+        req = f"{url}/api/alert/{alert_id}/merge/{case_id}"
         ret = requests.post(req, auth=self.thehive.auth)
         return ret.text
 
@@ -402,49 +388,45 @@ class TheHive(AppBase):
         self, apikey, url, organisation, field_type, cur_id, field, data
     ):
         # This is kinda silly but..
-        if field_type.lower() == "alert":
-            newdata = {}
+        if field_type.lower() != "alert":
+            return f"{field_type} is not implemented. See https://github.com/frikky/walkoff-integrations for more info."
 
-            if data.startswith("%s"):
-                ticket = self.thehive.get_alert(cur_id)
-                if ticket.status_code != 200:
-                    pass
+        newdata = {}
 
-                newdata[field] = "%s%s" % (ticket.json()[field], data[2:])
-            else:
-                newdata[field] = data
+        if data.startswith("%s"):
+            ticket = self.thehive.get_alert(cur_id)
+            newdata[field] = f"{ticket.json()[field]}{data[2:]}"
+        else:
+            newdata[field] = data
 
             # Bleh
-            url = "%s/api/alert/%s" % (url, cur_id)
-            if field == "status":
-                if data == "New" or data == "Updated":
-                    url = "%s/markAsUnread" % url
-                elif data == "Ignored":
-                    url = "%s/markAsRead" % url
+        url = f"{url}/api/alert/{cur_id}"
+        if field == "status":
+            if data in ["New", "Updated"]:
+                url = f"{url}/markAsUnread"
+            elif data == "Ignored":
+                url = f"{url}/markAsRead"
 
-                ret = requests.post(
-                    url,
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer %s" % apikey,
-                    },
-                )
-            else:
-                ret = requests.patch(
-                    url,
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer %s" % apikey,
-                    },
-                    json=newdata,
-                )
-
-            return str(ret.status_code)
-        else:
-            return (
-                "%s is not implemented. See https://github.com/frikky/walkoff-integrations for more info."
-                % field_type
+            ret = requests.post(
+                url,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {apikey}",
+                },
             )
+
+        else:
+            ret = requests.patch(
+                url,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {apikey}",
+                },
+                json=newdata,
+            )
+
+
+        return str(ret.status_code)
 
     # https://github.com/TheHive-Project/TheHiveDocs/tree/master/api/connectors/cortex
     def delete_alert_artifact(self, apikey, url, organisation, artifact_id):
@@ -465,9 +447,7 @@ class TheHive(AppBase):
         if filedata["success"] == False:
             return "No file to upload. Skipping message."
 
-        headers = {
-            "Authorization": "Bearer %s" % apikey,
-        }
+        headers = {"Authorization": f"Bearer {apikey}"}
 
         files = {}
         if len(filedata["data"]) > 0:
@@ -477,11 +457,12 @@ class TheHive(AppBase):
 
         data = {"_json": """{"message": "%s"}""" % message}
         response = requests.post(
-            "%s/api/case/task/%s/log" % (url, task_id),
+            f"{url}/api/case/task/{task_id}/log",
             headers=headers,
             files=files,
             data=data,
         )
+
         return response.text
 
     # Creates an observable as a file in a case
@@ -491,9 +472,7 @@ class TheHive(AppBase):
         if filedata["success"] == False:
             return "No file to upload. Skipping message."
 
-        headers = {
-            "Authorization": "Bearer %s" % apikey,
-        }
+        headers = {"Authorization": f"Bearer {apikey}"}
 
         if tags:
             if ", " in tags:
@@ -510,14 +489,15 @@ class TheHive(AppBase):
             }
 
         outerarray = {"dataType": "file", "tags": tags}
-        data = {"_json": """%s""" % json.dumps(outerarray)}
+        data = {"_json": f"""{json.dumps(outerarray)}"""}
         response = requests.post(
-            "%s/api/case/%s/artifact" % (url, case_id),
+            f"{url}/api/case/{case_id}/artifact",
             headers=headers,
             files=files,
             data=data,
             verify=False,
         )
+
         return response.text
 
     # Get all artifacts of a given case
@@ -538,23 +518,21 @@ class TheHive(AppBase):
             case_id, query=query, sort=["-startDate", "+ioc"], range="all"
         )
 
-        # Display the result
-        if response.status_code == 200:
-            # Get response data
-            list = response.json()
-
-            # Display response data
-            return (
-                json.dumps(list, indent=4, sort_keys=True)
-                if list
-                else json.dumps(
-                    {"status": 200, "message": "No observable results"},
-                    indent=4,
-                    sort_keys=True,
-                )
-            )
-        else:
+        if response.status_code != 200:
             return f"Failure: {response.status_code}/{response.text}"
+        # Get response data
+        list = response.json()
+
+        # Display response data
+        return (
+            json.dumps(list, indent=4, sort_keys=True)
+            if list
+            else json.dumps(
+                {"status": 200, "message": "No observable results"},
+                indent=4,
+                sort_keys=True,
+            )
+        )
 
     # Update TheHive Case
     def update_case(
@@ -582,22 +560,18 @@ class TheHive(AppBase):
 
         # Get current case data and update fields if new data exists
         case = self.thehive.get_case(cur_id).json()
-        case_title = title if title else case["title"]
-        case_description = description if description else case["description"]
+        case_title = title or case["title"]
+        case_description = description or case["description"]
         case_severity = int(severity) if severity else case["severity"]
-        case_owner = owner if owner else case["owner"]
-        case_flag = (
-            (False if flag.lower() == "false" else True) if flag else case["flag"]
-        )
+        case_owner = owner or case["owner"]
+        case_flag = flag.lower() != "false" if flag else case["flag"]
         case_tlp = int(tlp) if tlp else case["tlp"]
         case_pap = int(pap) if pap else case["pap"]
         case_tags = tags.split(",") if tags else case["tags"]
-        case_status = status if status else case["status"]
-        case_resolutionStatus = (
-            resolution_status if resolution_status else case["resolutionStatus"]
-        )
-        case_impactStatus = impact_status if impact_status else case["impactStatus"]
-        case_summary = summary if summary else case["summary"]
+        case_status = status or case["status"]
+        case_resolutionStatus = resolution_status or case["resolutionStatus"]
+        case_impactStatus = impact_status or case["impactStatus"]
+        case_summary = summary or case["summary"]
         case_customFields = case["customFields"]
 
         # Prepare the customfields

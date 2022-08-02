@@ -53,8 +53,7 @@ class Tools(AppBase):
     def base64_conversion(self, string, operation):
         if operation == "encode":
             encoded_bytes = base64.b64encode(string.encode("utf-8"))
-            encoded_string = str(encoded_bytes, "utf-8")
-            return encoded_string
+            return str(encoded_bytes, "utf-8")
 
         elif operation == "decode":
             try:
@@ -122,7 +121,7 @@ class Tools(AppBase):
         data = {"numbers": targets, "body": body}
 
         url = "https://shuffler.io/api/v1/functions/sendsms"
-        headers = {"Authorization": "Bearer %s" % apikey}
+        headers = {"Authorization": f"Bearer {apikey}"}
         return requests.post(url, headers=headers, json=data).text
 
     # This is an email function of Shuffle
@@ -151,14 +150,14 @@ class Tools(AppBase):
                 for item in attachments:
                     new_file = self.get_file(file_ids)
                     files.append(new_file)
-            
+
                 data["attachments"] = files
             except Exception as e:
                 self.logger.info(f"Error in attachment parsing for email: {e}")
-                
+
 
         url = "https://shuffler.io/api/v1/functions/sendmail"
-        headers = {"Authorization": "Bearer %s" % apikey}
+        headers = {"Authorization": f"Bearer {apikey}"}
         return requests.post(url, headers=headers, json=data).text
 
     def repeat_back_to_me(self, call):
@@ -171,19 +170,15 @@ class Tools(AppBase):
                 iocs = find_iocs(str(data))
                 newarray = []
                 for key, value in iocs.items():
-                    if input_type != "all":
-                        if key not in input_type:
-                            continue
+                    if input_type != "all" and key not in input_type:
+                        continue
                     if len(value) > 0:
                         for item in value:
                             if isinstance(value, dict):
                                 for subkey, subvalue in value.items():
                                     if len(subvalue) > 0:
                                         for subitem in subvalue:
-                                            data = {
-                                                "data": subitem,
-                                                "data_type": "%s_%s" % (key[:-1], subkey),
-                                            }
+                                            data = {"data": subitem, "data_type": f"{key[:-1]}_{subkey}"}
                                             if data not in newarray:
                                                 newarray.append(data)
                             else:
@@ -197,18 +192,11 @@ class Tools(AppBase):
             except Exception as excp:
                 return {"success": False, "message": "{}".format(excp)}
 
-        if input_type == "":
-            input_type = "all"
-        else:
-            input_type = input_type.split(",")
-
+        input_type = "all" if input_type == "" else input_type.split(",")
         try:
             file_ids = eval(file_ids)  # nosec
-        except SyntaxError:
+        except (SyntaxError, NameError):
             file_ids = file_ids
-        except NameError:
-            file_ids = file_ids
-
         return_value = None
         if type(file_ids) == str:
             return_value = parse(self.get_file(file_ids)["data"])
@@ -232,17 +220,12 @@ class Tools(AppBase):
     # https://github.com/fhightower/ioc-finder
     def parse_ioc(self, input_string, input_type="all"):
         input_string = str(input_string)
-        if input_type == "":
-            input_type = "all"
-        else:
-            input_type = input_type.split(",")
-
+        input_type = "all" if input_type == "" else input_type.split(",")
         iocs = find_iocs(input_string)
         newarray = []
         for key, value in iocs.items():
-            if input_type != "all":
-                if key not in input_type:
-                    continue
+            if input_type != "all" and key not in input_type:
+                continue
 
             if len(value) > 0:
                 for item in value:
@@ -252,10 +235,7 @@ class Tools(AppBase):
                         for subkey, subvalue in value.items():
                             if len(subvalue) > 0:
                                 for subitem in subvalue:
-                                    data = {
-                                        "data": subitem,
-                                        "data_type": "%s_%s" % (key[:-1], subkey),
-                                    }
+                                    data = {"data": subitem, "data_type": f"{key[:-1]}_{subkey}"}
                                     if data not in newarray:
                                         newarray.append(data)
                     else:
@@ -270,7 +250,7 @@ class Tools(AppBase):
                 try:
                     item["is_private_ip"] = ipaddress.ip_address(item["data"]).is_private
                 except:
-                    self.logger.info("Error parsing %s" % item["data"])
+                    self.logger.info(f'Error parsing {item["data"]}')
 
         try:
             newarray = json.dumps(newarray)
@@ -293,7 +273,7 @@ class Tools(AppBase):
                 item = item.replace("'", '"', -1)
                 item = json.loads(item)
             except json.decoder.JSONDecodeError as e:
-                self.logger.info("Parse error: %s" % e)
+                self.logger.info(f"Parse error: {e}")
 
         return str(len(item))
 
@@ -323,7 +303,7 @@ class Tools(AppBase):
         #        "reason": "Item is not valid JSON (2)"
         #    }
 
-        
+
         if isinstance(value, str):
             try:
                 value = json.loads(value)
@@ -345,12 +325,12 @@ class Tools(AppBase):
                 buildstring += f"[\"{subkey}\"]" 
 
             buildstring += f" = {value}"
-            self.logger.info("BUILD: %s" % buildstring)
+            self.logger.info(f"BUILD: {buildstring}")
 
             #output = 
             exec(buildstring)
             json_object = base_object
-            #json_object[first_object] = base_object
+                #json_object[first_object] = base_object
         else:
             json_object[key] = value
 
@@ -381,7 +361,7 @@ class Tools(AppBase):
         elif "," in translate_from:
             splitdata = translate_from.split(",")
 
-        if isinstance(input_data, list) or isinstance(input_data, dict):
+        if isinstance(input_data, (list, dict)):
             input_data = json.dumps(input_data)
 
         to_return = input_data
@@ -408,10 +388,7 @@ class Tools(AppBase):
             try:
                 mapping = json.loads(mapping)
             except json.decoder.JSONDecodeError as e:
-                return {
-                    "success": False,
-                    "reason": "Mapping is not valid JSON: %s" % e,
-                }
+                return {"success": False, "reason": f"Mapping is not valid JSON: {e}"}
 
         for key, value in mapping.items():
             try:
@@ -441,7 +418,7 @@ class Tools(AppBase):
                         returnvalues[name] = [item]
 
                 else:
-                    for i in range(0, len(item)):
+                    for i in range(len(item)):
                         found = True 
                         name = "group_%d" % i
                         try:
@@ -453,10 +430,7 @@ class Tools(AppBase):
 
             return returnvalues
         except re.error as e:
-            return {
-                "success": False,
-                "reason": "Bad regex pattern: %s" % e,
-            }
+            return {"success": False, "reason": f"Bad regex pattern: {e}"}
 
     def regex_replace(
         self, input_data, regex, replace_string="", ignore_case="False"
@@ -484,10 +458,7 @@ class Tools(AppBase):
                 }
 
             if ".py" not in filedata["filename"]:
-                return {
-                    "success": False,
-                    "message": f"Filename needs to contain .py",
-                }
+                return {"success": False, "message": "Filename needs to contain .py"}
 
 
         # Write the code to a file
@@ -515,7 +486,7 @@ class Tools(AppBase):
                     "success": True,
                     "message": s,
                 }
-                
+
         except Exception as e:
             return {
                 "success": False,
@@ -540,8 +511,7 @@ class Tools(AppBase):
             item = stdout[1]
 
         try:
-            ret = item.decode("utf-8")
-            return ret
+            return item.decode("utf-8")
         except Exception:
             return item
 
@@ -550,10 +520,7 @@ class Tools(AppBase):
     def filter_list(self, input_list, field, check, value, opposite):
         self.logger.info(f"\nRunning function with list {input_list}")
 
-        flip = False
-        if str(opposite).lower() == "true":
-            flip = True
-
+        flip = str(opposite).lower() == "true"
         try:
             #input_list = eval(input_list)  # nosec
             input_list = json.loads(input_list)
@@ -573,8 +540,6 @@ class Tools(AppBase):
                 "invalid": [],
             }
 
-            input_list = [input_list]
-
         self.logger.info(f"\nRunning with check \"%s\" on list of length %d\n" % (check, len(input_list)))
         found_items = []
         new_list = []
@@ -592,13 +557,11 @@ class Tools(AppBase):
                     for subfield in field.split("."):
                         tmp = tmp[subfield]
 
-                if isinstance(tmp, dict) or isinstance(tmp, list):
+                if isinstance(tmp, (dict, list)):
                     try:
                         tmp = json.dumps(tmp)
                     except json.decoder.JSONDecodeError as e:
-                        self.logger.info("FAILED DECODING: %s" % e)
-                        pass
-
+                        self.logger.info(f"FAILED DECODING: {e}")
                 #self.logger.info("PRE CHECKS FOR TMP: %")
 
                 # EQUALS JUST FOR STR
@@ -607,18 +570,16 @@ class Tools(AppBase):
                     # value = tmp.lower()
 
                     if str(tmp).lower() == str(value).lower():
-                        self.logger.info("APPENDED BECAUSE %s %s %s" % (field, check, value))
-                        if not flip:
-                            new_list.append(item)
-                        else:
-                            failed_list.append(item)
-                    else:
+                        self.logger.info(f"APPENDED BECAUSE {field} {check} {value}")
                         if flip:
-                            new_list.append(item)
-                        else:
                             failed_list.append(item)
+                        else:
+                            new_list.append(item)
+                    elif flip:
+                        new_list.append(item)
+                    else:
+                        failed_list.append(item)
 
-                # IS EMPTY FOR STR OR LISTS
                 elif check == "is empty":
                     if tmp == "[]":
                         tmp = []
@@ -634,7 +595,6 @@ class Tools(AppBase):
                     else:
                         failed_list.append(item)
 
-                # STARTS WITH = FOR STR OR [0] FOR LIST
                 elif check == "starts with":
                     if type(tmp) == list and tmp[0] == value and not flip:
                         new_list.append(item)
@@ -647,7 +607,6 @@ class Tools(AppBase):
                     else:
                         failed_list.append(item)
 
-                # ENDS WITH = FOR STR OR [-1] FOR LIST
                 elif check == "ends with":
                     if type(tmp) == list and tmp[-1] == value and not flip:
                         new_list.append(item)
@@ -660,7 +619,6 @@ class Tools(AppBase):
                     else:
                         failed_list.append(item)
 
-                # CONTAINS FIND FOR LIST AND IN FOR STR
                 elif check == "contains":
                     if type(tmp) == list and value.lower() in tmp and not flip:
                         new_list.append(item)
@@ -683,7 +641,7 @@ class Tools(AppBase):
                 elif check == "contains any of":
                     self.logger.info("Inside contains any of")
                     checklist = value.split(",")
-                    self.logger.info("Checklist and tmp: %s - %s" % (checklist, tmp))
+                    self.logger.info(f"Checklist and tmp: {checklist} - {tmp}")
                     found = False
                     for subcheck in checklist:
                         subcheck = subcheck.strip().lower()
@@ -692,15 +650,15 @@ class Tools(AppBase):
                             new_list.append(item)
                             found = True
                             break
-                        elif type(tmp) == list and subcheck in tmp and flip:
+                        elif type(tmp) == list and subcheck in tmp:
                             failed_list.append(item)
                             found = True
                             break
-                        elif type(tmp) == list and subcheck not in tmp and not flip:
+                        elif type(tmp) == list and not flip:
                             new_list.append(item)
                             found = True
                             break
-                        elif type(tmp) == list and subcheck not in tmp and flip:
+                        elif type(tmp) == list:
                             failed_list.append(item)
                             found = True
                             break
@@ -724,7 +682,6 @@ class Tools(AppBase):
                     if not found:
                         failed_list.append(item)
 
-                # CONTAINS FIND FOR LIST AND IN FOR STR
                 elif check == "field is unique":
                     #self.logger.info("FOUND: %s"
                     if tmp.lower() not in found_items and not flip:
@@ -748,42 +705,21 @@ class Tools(AppBase):
                     #    found = True
                     #    break
 
-                # CONTAINS FIND FOR LIST AND IN FOR STR
-                elif check == "contains any of":
-                    value = self.parse_list_internal(value)
-                    checklist = value.split(",")
-                    tmp = tmp.lower()
-                    self.logger.info("CHECKLIST: %s. Value: %s" % (checklist, tmp))
-                    found = False
-                    for value in checklist:
-                        if value in tmp and not flip:
-                            new_list.append(item)
-                            found = True
-                            break
-                        elif value not in tmp and flip:
-                            new_list.append(item)
-                            found = True
-                            break
-
-                    if not found:
-                        failed_list.append(item)
-
                 elif check == "larger than":
                     if int(tmp) > int(value) and not flip:
                         new_list.append(item)
-                    elif int(tmp) > int(value) and flip:
+                    elif int(tmp) > int(value):
                         new_list.append(item)
                     else:
                         failed_list.append(item)
                 elif check == "less than":
                     if int(tmp) < int(value) and not flip:
                         new_list.append(item)
-                    elif int(tmp) < int(value) and flip:
+                    elif int(tmp) < int(value):
                         new_list.append(item)
                     else:
                         failed_list.append(item)
 
-                # SINGLE ITEM COULD BE A FILE OR A LIST OF FILES
                 elif check == "files by extension":
                     if type(tmp) == list:
                         file_list = []
@@ -823,9 +759,9 @@ class Tools(AppBase):
                             failed_list.append(item)
 
             except Exception as e:
-                self.logger.info("[WARNING] FAILED WITH EXCEPTION: %s" % e)
+                self.logger.info(f"[WARNING] FAILED WITH EXCEPTION: {e}")
                 failed_list.append(item)
-            # return
+                # return
 
         try:
             return json.dumps(
@@ -840,9 +776,10 @@ class Tools(AppBase):
             return json.dumps(
                 {
                     "success": False,
-                    "reason": "Failed parsing filter list output" + e,
+                    "reason": f"Failed parsing filter list output{e}",
                 }
             )
+
 
         return new_list
 
@@ -903,31 +840,27 @@ class Tools(AppBase):
 
     # Gets the file's metadata, e.g. md5
     def get_file_meta(self, file_id):
-        headers = {
-            "Authorization": "Bearer %s" % self.authorization,
-        }
+        headers = {"Authorization": f"Bearer {self.authorization}"}
 
         ret = requests.get(
-            "%s/api/v1/files/%s?execution_id=%s"
-            % (self.url, file_id, self.current_execution_id),
+            f"{self.url}/api/v1/files/{file_id}?execution_id={self.current_execution_id}",
             headers=headers,
         )
+
         self.logger.info(f"RET: {ret}")
 
         return ret.text
 
     # Use data from AppBase to talk to backend
     def delete_file(self, file_id):
-        headers = {
-            "Authorization": "Bearer %s" % self.authorization,
-        }
-        self.logger.info("HEADERS: %s" % headers)
+        headers = {"Authorization": f"Bearer {self.authorization}"}
+        self.logger.info(f"HEADERS: {headers}")
 
         ret = requests.delete(
-            "%s/api/v1/files/%s?execution_id=%s"
-            % (self.url, file_id, self.current_execution_id),
+            f"{self.url}/api/v1/files/{file_id}?execution_id={self.current_execution_id}",
             headers=headers,
         )
+
         return ret.text
 
     def create_file(self, filename, data):
@@ -957,7 +890,7 @@ class Tools(AppBase):
         if filedata is None:
             return "File is empty?"
 
-        self.logger.info("INSIDE APP DATA: %s" % filedata)
+        self.logger.info(f"INSIDE APP DATA: {filedata}")
         try:
             return filedata["data"].decode()
         except:
@@ -975,7 +908,7 @@ class Tools(AppBase):
         if "?" in filename:
             filename = filename.split("?")[0]
 
-        if custom_filename and len(str(custom_filename)) > 0:
+        if custom_filename and str(custom_filename) != "":
             filename = custom_filename
 
         fileret = self.set_files(
@@ -987,12 +920,11 @@ class Tools(AppBase):
             ]
         )
 
-        if len(fileret) > 0:
-            value = {"success": True, "file_id": fileret[0]}
-        else:
-            value = {"success": False, "reason": "No files downloaded"}
-
-        return value
+        return (
+            {"success": True, "file_id": fileret[0]}
+            if len(fileret) > 0
+            else {"success": False, "reason": "No files downloaded"}
+        )
 
     
     def extract_archive(self, file_id, fileformat="zip", password=None):

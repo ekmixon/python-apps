@@ -20,9 +20,9 @@ class Recordedfuture(AppBase):
         super().__init__(redis, logger, console_logger)
 
     def get_alerts(self, apikey, status="", limit=10):
-        url = "https://api.recordedfuture.com/v2/alert/search?limit=%s" % limit
+        url = f"https://api.recordedfuture.com/v2/alert/search?limit={limit}"
         if status:
-            url = "%s&status=%s" % (url, status)
+            url = f"{url}&status={status}"
 
         parsed_headers = {
             'X-RFToken': apikey,
@@ -31,7 +31,7 @@ class Recordedfuture(AppBase):
         return requests.get(url, headers=parsed_headers).text
 
     def get_alert(self, apikey, id):
-        url = "https://api.recordedfuture.com/v2/alert/%s" % id 
+        url = f"https://api.recordedfuture.com/v2/alert/{id}"
         parsed_headers = {
             'X-RFToken': apikey,
         }
@@ -41,17 +41,17 @@ class Recordedfuture(AppBase):
 
 # Run the actual thing after we've checked params
 def run(request):
-    action = request.get_json() 
+    action = request.get_json()
     print(action)
     print(type(action))
     authorization_key = action.get("authorization")
     current_execution_id = action.get("execution_id")
-	
+
     if action and "name" in action and "app_name" in action:
         Recordedfuture.run(action)
-        return f'Attempting to execute function {action["name"]} in app {action["app_name"]}' 
+        return f'Attempting to execute function {action["name"]} in app {action["app_name"]}'
     else:
-        return f'Invalid action'
+        return 'Invalid action'
 
 if __name__ == "__main__":
     Recordedfuture.run()

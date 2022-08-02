@@ -36,10 +36,9 @@ class HTTP(AppBase):
         else:
             print("FAILED to run bash!")
             item = stdout[1]
-    
+
         try:
-            ret = item.decode("utf-8")
-            return ret 
+            return item.decode("utf-8")
         except:
             return item
 
@@ -60,7 +59,7 @@ class HTTP(AppBase):
     def splitheaders(self, headers):
         parsed_headers = {}
         if headers:
-            split_headers = headers.split("\n") 
+            split_headers = headers.split("\n")
             self.logger.info(split_headers)
             for header in split_headers:
                 if ": " in header:
@@ -72,45 +71,37 @@ class HTTP(AppBase):
                 elif "=" in header:
                     splititem = "="
                 else:
-                    self.logger.info("Skipping header %s as its invalid" % header)
+                    self.logger.info(f"Skipping header {header} as its invalid")
                     continue
 
                 splitheader = header.split(splititem)
                 if len(splitheader) == 2:
                     parsed_headers[splitheader[0]] = splitheader[1]
                 else:
-                    self.logger.info("Skipping header %s with split %s cus only one item" % (header, splititem))
+                    self.logger.info(
+                        f"Skipping header {header} with split {splititem} cus only one item"
+                    )
+
                     continue
 
         return parsed_headers
 
     def checkverify(self, verify):
-        if verify == None:
-            return False
-        elif verify:
-            return True
-        elif not verify:
-            return False
-        elif verify.lower().strip() == "false":
-            return False
-        else:
-            return True 
+        return bool(verify is not None and verify) 
 
     def checkbody(self, body):
         # Indicates json
         if body.strip().startswith("{"):
             body = body.replace("\'", "\"")
 
-            # Not sure if loading is necessary
-            # Seemed to work with plain string into data=body too, and not parsed json=body
-            #try:
-            #    body = json.loads(body)
-            #except json.decoder.JSONDecodeError as e:
-            #    return body
+        # Not sure if loading is necessary
+        # Seemed to work with plain string into data=body too, and not parsed json=body
+        #try:
+        #    body = json.loads(body)
+        #except json.decoder.JSONDecodeError as e:
+        #    return body
 
-            return body
-        else:
-            return body
+        return body
 
     def GET(self, url, headers="", verify=True):
         parsed_headers = self.splitheaders(headers)
@@ -157,17 +148,17 @@ class HTTP(AppBase):
 # Run the actual thing after we've checked params
 def run(request):
     print("Starting cloud!")
-    action = request.get_json() 
+    action = request.get_json()
     print(action)
     print(type(action))
     authorization_key = action.get("authorization")
     current_execution_id = action.get("execution_id")
-	
+
     if action and "name" in action and "app_name" in action:
         HTTP.run(action)
-        return f'Attempting to execute function {action["name"]} in app {action["app_name"]}' 
+        return f'Attempting to execute function {action["name"]} in app {action["app_name"]}'
     else:
-        return f'Invalid action'
+        return 'Invalid action'
 
 if __name__ == "__main__":
     HTTP.run()

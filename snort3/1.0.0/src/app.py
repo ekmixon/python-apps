@@ -24,7 +24,7 @@ class snort3(AppBase):
         target_dir = "/app"
         ref_dict = self.get_file(file_ref)
 
-        target_path = target_dir + "/" + ref_dict["filename"]
+        target_path = f"{target_dir}/" + ref_dict["filename"]
         with open(target_path, "xb") as tmp_file:
             tmp_file.write(ref_dict["data"])
             tmp_file.close()
@@ -44,19 +44,15 @@ class snort3(AppBase):
             "-A",
             "alert_fast",
         ]
-        print("Executing the following command: {}".format(" ".join(cmd)))
+        print(f'Executing the following command: {" ".join(cmd)}')
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
         )
 
-        alerts = []
-        for line in result.stdout.split("\n"):
-            if "[**]" in line:
-                alerts.append(line)
-
-        return_data = {
+        alerts = [line for line in result.stdout.split("\n") if "[**]" in line]
+        return {
             "success": True,
             "return_code": result.returncode,
             "alerts": alerts,
@@ -64,7 +60,6 @@ class snort3(AppBase):
             "pcap": {"name": pcap_path},
             "cmd": cmd,
         }
-        return return_data
 
     def simple_analyze_file(self, config_file, rules_file, pcap_file):
 

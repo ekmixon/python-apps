@@ -40,7 +40,7 @@ class Sooty(AppBase):
 
     def UnshortenUrl(self, url):
         link = url.strip()
-        req = requests.get(str('https://unshorten.me/s/' + link))
+        req = requests.get(str(f'https://unshorten.me/s/{link}'))
         return {"Success":"True",'UnshortenUrl':req.text}
 
     def Cisco7Decoder(self, password):
@@ -57,7 +57,11 @@ class Sooty(AppBase):
             pw_text = pw[2:]
             pw_hex_values = [pw_text[start:start+2] for start in range(0,len(pw_text),2)]
             # XOR those values against the key values, starting at the index, and convert to ASCII
-            pw_chars = [chr(key[index+i] ^ int(pw_hex_values[i],16)) for i in range(0,len(pw_hex_values))]
+            pw_chars = [
+                chr(key[index + i] ^ int(pw_hex_values[i], 16))
+                for i in range(len(pw_hex_values))
+            ]
+
             pw_plaintext = ''.join(pw_chars)
             return {"Success":"True",'Result':pw_plaintext}
         except Exception as e:

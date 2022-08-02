@@ -13,7 +13,7 @@ from walkoff_app_sdk.app_base import AppBase
 def datetime_handler(x):
     """ This function is used make datetime object json serilizable, 
     removing this function can cause error in some actions """
-    
+
     if isinstance(x, datetime.datetime):
         return x.isoformat()
     raise TypeError("Unknown type")
@@ -63,12 +63,9 @@ class AWSEC2(AppBase):
         network_acl = self.ec2.NetworkAcl(NetworkAclId)
 
         if "/" not in ip:
-            ip = "%s/32" % ip
+            ip = f"{ip}/32"
 
-        egress = True 
-        if direction == "inbound":
-            egress = False
-
+        egress = direction != "inbound"
         # This is a shitty system :)
         minimum = 100
         max_range = 30000
@@ -79,7 +76,7 @@ class AWSEC2(AppBase):
                 continue
 
             if ip == item["CidrBlock"]:
-                raise Exception("IP %s is already being blocked." % ip)
+                raise Exception(f"IP {ip} is already being blocked.")
 
             numbers.append(item["RuleNumber"])
 
@@ -111,8 +108,8 @@ class AWSEC2(AppBase):
                 RuleNumber = minimum,
             )
         except botocore.exceptions.ClientError as e:
-            print("Error: %s" % e)
-            return "%s" % e
+            print(f"Error: {e}")
+            return f"{e}"
 
 
     # Write your data inside this function
@@ -125,17 +122,9 @@ class AWSEC2(AppBase):
         elif protocol.lower() == "udp":
             protocol = "17"
 
-        egress = True 
-        if direction == "inbound":
-            egress = False
-        else:
-            egress = True
-
-        if dryrun.lower() == "false":
-            dryrun = False
-        else:
-            dryrun = True
-
+        egress = True
+        egress = direction != "inbound"
+        dryrun = dryrun.lower() != "false"
         try:
             return network_acl.create_entry(
                 CidrBlock = cidr_block,
@@ -154,14 +143,14 @@ class AWSEC2(AppBase):
                 RuleNumber = int(rule_number),
             )
         except botocore.exceptions.ClientError as e:
-            print("Error: %s" % e)
-            return "%s" % e
+            print(f"Error: {e}")
+            return f"{e}"
 
     #Terminate, Start and Stop Instance
     def instance_state_change(self, access_key, secret_key, region, instance_id, action, dryrun):
         self.ec2 = self.auth_ec2(access_key, secret_key, region)
         instance = self.ec2.Instance(instance_id)
-        dryrun = True if dryrun in ["True", "true"] else False
+        dryrun = dryrun in ["True", "true"]
 
         try:
             if action == "terminate":
@@ -171,14 +160,14 @@ class AWSEC2(AppBase):
             else:
                 return instance.stop(DryRun = dryrun)
         except botocore.exceptions.ClientError as e:
-            print("Error: %s" % e)
-            return "%s" % e
+            print(f"Error: {e}")
+            return f"{e}"
     
     #Create Network Interface
     def create_network_interface(self, access_key, secret_key, region, subnetid, description, dryrun ):
         self.ec2 = self.auth_ec2(access_key, secret_key, region)
         client = self.ec2.meta.client
-        dryrun = True if dryrun in ["True", "true"] else False
+        dryrun = dryrun in ["True", "true"]
         try:
             return client.create_network_interface(
                 Description = description,
@@ -192,8 +181,8 @@ class AWSEC2(AppBase):
     def create_image(self, access_key, secret_key, region, description, instance_id, name, dryrun, noreboot):
         self.ec2 = self.auth_ec2(access_key, secret_key, region)
         client = self.ec2.meta.client
-        dryrun = True if dryrun in ["True", "true"] else False
-        noreboot = True if dryrun in ["True", "true"] else False
+        dryrun = dryrun in ["True", "true"]
+        noreboot = dryrun in {"True", "true"}
         try:
             return client.create_image(
                 Description=description,
@@ -209,7 +198,7 @@ class AWSEC2(AppBase):
     def deregister_an_image(self, access_key, secret_key, region, image_id, dryrun):
         self.ec2 = self.auth_ec2(access_key, secret_key, region)
         client = self.ec2.meta.client
-        dryrun = True if dryrun in ["True", "true"] else False
+        dryrun = dryrun in ["True", "true"]
         try:
             return client.deregister_image(
                 ImageId = image_id,
@@ -222,7 +211,7 @@ class AWSEC2(AppBase):
     def create_snapshot(self, access_key, secret_key, region, description, volume_id, dryrun):
         self.ec2 = self.auth_ec2(access_key, secret_key, region)
         client = self.ec2.meta.client
-        dryrun = True if dryrun in ["True", "true"] else False
+        dryrun = dryrun in ["True", "true"]
         try:
             response = client.create_snapshot(
                 Description = description,
@@ -237,7 +226,7 @@ class AWSEC2(AppBase):
     def delete_snapshot(self, access_key, secret_key, region, snapshot_id, dryrun):
         self.ec2 = self.auth_ec2(access_key, secret_key, region)
         client = self.ec2.meta.client
-        dryrun = True if dryrun in ["True", "true"] else False
+        dryrun = dryrun in ["True", "true"]
         try:
             return client.delete_snapshot(
             SnapshotId = snapshot_id,
@@ -250,7 +239,7 @@ class AWSEC2(AppBase):
     def delete_network_interface(self, access_key, secret_key, region, networkinterface_id, dryrun):
         self.ec2 = self.auth_ec2(access_key, secret_key, region)
         client = self.ec2.meta.client
-        dryrun = True if dryrun in ["True", "true"] else False
+        dryrun = dryrun in ["True", "true"]
         try:
             return client.delete_network_interface(
             NetworkInterfaceId = networkinterface_id,
@@ -263,12 +252,9 @@ class AWSEC2(AppBase):
     def describe_address(self, access_key, secret_key, region, publicips, dryrun):
         self.ec2=self.auth_ec2(access_key, secret_key, region)
         client = self.ec2.meta.client
-        dryrun = True if dryrun in ["True", "true"] else False
+        dryrun = dryrun in ["True", "true"]
         try:
-            if len(publicips)==0:
-                lt = []
-            else:
-                lt=publicips.split(','),
+            lt = [] if len(publicips)==0 else (publicips.split(','), )
             return client.describe_addresses(
                 PublicIps = lt,
                 DryRun = dryrun
@@ -280,12 +266,9 @@ class AWSEC2(AppBase):
     def describe_keypair(self, access_key, secret_key, region,  dryrun, option, value):
         self.ec2=self.auth_ec2(access_key, secret_key, region)
         client = self.ec2.meta.client
-        dryrun = True if dryrun in ["True", "true"] else False
+        dryrun = dryrun in ["True", "true"]
         try:
-            if len(value)==0:
-                lt=[]
-            else:
-                lt=value.split(',')
+            lt = [] if len(value)==0 else value.split(',')
             if option == 'KeyNames':
                 return client.describe_key_pairs(
                     KeyNames=lt,   
@@ -299,7 +282,7 @@ class AWSEC2(AppBase):
             else:
                 return client.describe_key_pairs(
                     DryRun = dryrun
-                )     
+                )
         except Exception as e:
             return e
 
@@ -307,18 +290,17 @@ class AWSEC2(AppBase):
     def describe_networkacls(self, access_key, secret_key, region, dryrun, networkAcl_Id):
         self.ec2=self.auth_ec2(access_key, secret_key, region)
         client = self.ec2.meta.client
-        dryrun = True if dryrun in ["True", "true"] else False
-        try:                
-            if len(networkAcl_Id)!=0:
-                lt=networkAcl_Id.split(',')
-                return client.describe_network_acls(
-                    DryRun = dryrun,
-                    NetworkAclIds = lt
-                )
-            else:
+        dryrun = dryrun in ["True", "true"]
+        try:        
+            if len(networkAcl_Id) == 0:
                 return client.describe_network_acls(
                     DryRun = dryrun,
                 )
+            lt=networkAcl_Id.split(',')
+            return client.describe_network_acls(
+                DryRun = dryrun,
+                NetworkAclIds = lt
+            )
         except Exception as e:
             return e
 
@@ -326,12 +308,9 @@ class AWSEC2(AppBase):
     def describe_securitygroups(self, access_key, secret_key, region, dryrun, option, value):
         self.ec2=self.auth_ec2(access_key, secret_key, region)
         client = self.ec2.meta.client
-        dryrun = True if dryrun in ["True", "true"] else False
+        dryrun = dryrun in ["True", "true"]
         try:
-            if len(value)==0:
-                lt=[]
-            else:
-                lt=value.split(',')
+            lt = [] if len(value)==0 else value.split(',')
             if option == 'GroupIds':
                 return client.describe_security_groups(
                     GroupIds=lt,   
@@ -345,7 +324,7 @@ class AWSEC2(AppBase):
             else:
                 return client.describe_security_groups(
                     DryRun = dryrun
-                )     
+                )
         except Exception as e:
             return e
 
@@ -353,20 +332,13 @@ class AWSEC2(AppBase):
     def describe_vpc(self, access_key, secret_key, region, dryrun, vpcid):
         self.ec2=self.auth_ec2(access_key, secret_key, region)
         client = self.ec2.meta.client
-        dryrun = True if dryrun in ["True", "true"] else False
+        dryrun = dryrun in ["True", "true"]
         try:
-            if len(vpcid)==0:
-                lt=[]
-                return client.describe_vpcs(
-                    DryRun = dryrun,
-                    VpcIds = lt
-                )
-            else:
-                lt=vpcid.split(',')
-                return client.describe_vpcs(
-                   DryRun = dryrun,
-                   VpcIds = lt
-                )
+            lt = [] if len(vpcid)==0 else vpcid.split(',')
+            return client.describe_vpcs(
+                DryRun = dryrun,
+                VpcIds = lt
+            )
         except Exception as e:
             return e
 
@@ -375,11 +347,11 @@ class AWSEC2(AppBase):
                     aws_access_key_id=access_key,
                     aws_secret_access_key=secret_key,
                     region_name=region)
-        dryrun = True if dryrun in ["True", "true"] else False    
-        
+        dryrun = dryrun in ["True", "true"]    
+
         try:
             if security_group_ids:
-                security_group_ids_list = [i for i in security_group_ids.split(" ")]
+                security_group_ids_list = list(security_group_ids.split(" "))
                 instance =  client.create_instances(
                                 DryRun= dryrun,
                                 ImageId=image_id,
@@ -389,14 +361,8 @@ class AWSEC2(AppBase):
                                 KeyName=key_name,
                                 SecurityGroupIds= security_group_ids_list,
                                 UserData= user_data
-                                                               
+
                             )
-                #parsing response         
-                total_instances = ["instance_id_"+str(i) for i in range(1,len(instance)+1)] 
-                instance_id_list = [i.id for i in instance]  
-                response = dict(zip(total_instances,instance_id_list))
-                response.update({"Success":"True"})
-                return response   
             else:
                 instance =  client.create_instances(
                                 DryRun= dryrun,
@@ -407,12 +373,12 @@ class AWSEC2(AppBase):
                                 KeyName=key_name,
                                 UserData= user_data
                             )
-                #parsing response            
-                total_instances = ["instance_id_"+str(i) for i in range(1,len(instance)+1)] 
-                instance_id_list = [i.id for i in instance]  
-                response = dict(zip(total_instances,instance_id_list))
-                response.update({"Success":"True"})
-                return response
+                #parsing response         
+            total_instances = [f"instance_id_{str(i)}" for i in range(1,len(instance)+1)]
+            instance_id_list = [i.id for i in instance]
+            response = dict(zip(total_instances,instance_id_list))
+            response["Success"] = "True"
+            return response
         except Exception as e:
             return f"Exception occured: {e}"        
 

@@ -29,7 +29,9 @@ class Siemonster(AppBase):
         return message
 
     def es_get_cluster_health(self, username, password, url):
-        return requests.get(url + "/_cluster/health", auth=(username, password), verify=False).text
+        return requests.get(
+            f"{url}/_cluster/health", auth=(username, password), verify=False
+        ).text
 
     def es_query(self, method, username, password, url, path, body):
         headers = {
